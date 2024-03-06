@@ -1,12 +1,13 @@
 package data
 
 import (
+	"image/color"
 	"math"
 	"sync"
 )
 
 type Particle struct {
-	Color     int
+	Color     color.RGBA
 	X         float64
 	Y         float64
 	field     *Field
@@ -15,7 +16,7 @@ type Particle struct {
 
 func NewParticle(field *Field, x float64, y float64) *Particle {
 	return &Particle{
-		Color: 1,
+		Color: color.RGBA{100, 200, 200, 0xff},
 		X:     x,
 		Y:     y,
 		field: field,
