@@ -3,14 +3,22 @@ package data
 import (
 	"fmt"
 	"image"
+	"math"
 	"math/rand"
 	"sync"
 )
 
 type Field struct {
 	particles []*Particle
+	xField    [][]float64
+	yField    [][]float64
 	step      float64
 	Size      Size
+}
+
+type VelocityField struct {
+	Data [][]float64
+	Time float64
 }
 
 type Size struct {
@@ -32,6 +40,28 @@ func NewField(particleCount int, size Size, step float64) *Field {
 	return field
 }
 
+func NewVelocityField(data [][]float64, time float64) *VelocityField {
+	return &VelocityField{
+		Data: data,
+		Time: time,
+	}
+}
+
+func (f *Field) SetVelocity(x [][]float64, y [][]float64) {
+	f.xField = x
+	f.yField = y
+}
+
+func (f *Field) GetVelocity(x float64, y float64, t float64) (float64, float64) {
+	pLx := float64(len(f.xField))/f.Size.MaxAxisX - f.Size.MinAxisX
+	pLy := float64(len(f.yField))/f.Size.MaxAxisY - f.Size.MinAxisY
+	vX := int(math.Round(x * pLx))
+	vY := int(math.Round(y * pLx))
+	uX := int(math.Round(x * pLy))
+	uY := int(math.Round(y * pLy))
+	return f.xField[vX][vY], f.yField[uX][uY]
+}
+
 func (f *Field) UpdatePosition() {
 	var wg sync.WaitGroup
 
@@ -39,7 +69,7 @@ func (f *Field) UpdatePosition() {
 		wg.Add(1)
 		go func(p *Particle, t float64) {
 			defer wg.Done()
-			p.UpdatePosition(t)
+			p.UpdatePositionAnalytical(t)
 		}(p, f.step)
 	}
 	wg.Wait()
