@@ -1,37 +1,35 @@
 package interpolation
 
 import (
+	"errors"
 	"math"
-	"slices"
 
 	"github.com/cnkei/gospline"
+	"github.com/pa-m/sklearn/interpolate"
 )
 
-type Kernel struct {
-	data [][]float64
-}
-
-func NewKernel(data [][]float64) *Kernel {
-	return &Kernel{data: data}
-}
-
-func (k *Kernel) BilinearInterpolation(x, y float64) (float64, error) {
-	width, height := len(k.data[0]), len(k.data)
-
-	i, j := int(math.Floor(x)), int(math.Floor(y))
-	t, u := x-float64(i), y-float64(j)
-
-	if i == width-1 {
-		i--
+func NewBilinearInterpolation(data [][]float64) func(x, y float64) float64 {
+	x, y, z := make([]float64, len(data)*len(data)), make([]float64, len(data)*len(data)), make([]float64, len(data)*len(data))
+	c := 0
+	for i := 0; i < len(data); i++ {
+		for j := 0; j < len(data); j++ {
+			x[c] = float64(i)
+			y[c] = float64(j)
+			z[c] = data[i][j]
+			c++
+		}
 	}
-	if j == height-1 {
-		j--
-	}
-	return (k.data[j][i]*(1-t)+k.data[j][i+1]*t)*(1-u) + (k.data[j+1][i]*(1-t)+k.data[j+1][i+1]*t)*u, nil
+	return interpolate.Interp2d(x, y, z)
 }
 
 func SplineInterpolation(xs, ys []float64, x float64) (float64, error) {
-	slices.Sort(xs)
 	s := gospline.NewCubicSpline(xs, ys)
-	return s.At(x), nil
+	v := s.At(x)
+	if math.IsNaN(v) {
+		if xs[0] == 0 {
+			return ys[0], nil
+		}
+		return 0, errors.New("interpolation failed")
+	}
+	return v, nil
 }

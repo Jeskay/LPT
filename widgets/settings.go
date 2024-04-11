@@ -16,7 +16,7 @@ type SettingsMenu struct {
 	submitBtn   *widget.Button
 }
 
-func NewSettingsMenu(window fyne.Window, onChanged func(field *data.Field)) *SettingsMenu {
+func NewSettingsMenu(window fyne.Window, onChanged func(manager *data.FieldManager)) *SettingsMenu {
 	sm := &SettingsMenu{
 		uImporter: NewFileImporter(window, "Выбрать файл u"),
 		vImporter: NewFileImporter(window, "Выбрать файл w"),
@@ -37,18 +37,22 @@ func NewSettingsMenu(window fyne.Window, onChanged func(field *data.Field)) *Set
 	}
 	sm.tStepInput = NewParsedFloatEntry(tStepParsed, tStepFailed)
 	sm.submitBtn = widget.NewButton("Применить", func() {
-		step, particleCount, _, _ := sm.GetData()
-
-		field := data.NewField(particleCount, data.Size{
-			MinAxisX: -3,
-			MaxAxisX: 3,
-			MinAxisY: -3,
-			MaxAxisY: 3,
-		}, step)
-		xField := sm.uImporter.GetFields()[0]
-		yField := sm.vImporter.GetFields()[0]
-		field.SetVelocity(xField.Data, yField.Data)
-		onChanged(field)
+		step, particleCount, uFields, vFields := sm.GetData()
+		params := data.FieldParams{
+			ParticleCount: particleCount,
+			Size: data.Size{
+				MinAxisX: -3,
+				MaxAxisX: 3,
+				MinAxisY: -3,
+				MaxAxisY: 3,
+			},
+			TimeStep: step,
+		}
+		fieldManager, err := data.NewFieldManager(params, uFields, vFields)
+		if err != nil {
+			panic(err)
+		}
+		onChanged(fieldManager)
 	})
 	return sm
 }

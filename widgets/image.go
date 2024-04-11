@@ -4,6 +4,7 @@ import (
 	"LPT/data"
 	"fmt"
 	"image"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -15,80 +16,114 @@ import (
 )
 
 type DisplayWindow struct {
-	image       *ImageDisplay
-	window      fyne.Window
-	currentT    int
-	nextPageBtn *widget.Button
-	prevPageBtn *widget.Button
-	pageLb      binding.String
-	maxT        int
+	image        *ImageDisplay
+	fieldManager *data.FieldManager
+	window       fyne.Window
+	currentT     int
+	nextPageBtn  *widget.Button
+	prevPageBtn  *widget.Button
+	playBtn      *widget.Button
+	pageLb       binding.String
+	maxT         int
+	pause        bool
+	timerQ       chan struct{}
 }
 
 type ImageDisplay struct {
-	img   *canvas.Image
-	field *data.Field
+	img *canvas.Image
 }
 
-func NewDisplayWindow(app fyne.App, title string, w, h float32, field *data.Field) *DisplayWindow {
+func NewDisplayWindow(app fyne.App, title string, w, h float32, fieldManager *data.FieldManager) *DisplayWindow {
 	display := &DisplayWindow{
-		window: app.NewWindow(title),
-		image:  NewImageDisplay(field),
-		maxT:   10,
-		pageLb: binding.NewString(),
+		window:       app.NewWindow(title),
+		fieldManager: fieldManager,
+		image:        NewImageDisplay(fieldManager.GetImage(0, 1080, 720)),
+		maxT:         fieldManager.VelocityRecords,
+		pageLb:       binding.NewString(),
+		pause:        true,
 	}
 	display.prevPageBtn = widget.NewButtonWithIcon("", theme.MediaFastRewindIcon(), display.PreviousStep)
 	display.nextPageBtn = widget.NewButtonWithIcon("", theme.MediaFastForwardIcon(), display.NextStep)
+	display.playBtn = widget.NewButtonWithIcon("", theme.MediaPlayIcon(), display.PlayPause)
 	arrows := container.New(layout.NewHBoxLayout(),
 		display.prevPageBtn,
-		widget.NewLabelWithData(display.pageLb),
+		container.New(layout.NewVBoxLayout(), display.playBtn, widget.NewLabelWithData(display.pageLb)),
 		display.nextPageBtn,
 	)
 	canvasContainer := container.NewStack(display.image.GetCanvas())
 	canvasContainer.Resize(fyne.NewSize(w, h))
 	container := container.New(layout.NewVBoxLayout(), canvasContainer, container.NewCenter(arrows))
-	display.NextStep()
 	display.prevPageBtn.Disable()
+	display.pageLb.Set(fmt.Sprintf("%d/%d", display.currentT+1, display.maxT))
 	display.window.SetContent(container)
 	return display
 }
 
 func (w *DisplayWindow) Show() { w.window.Show() }
 func (w *DisplayWindow) Hide() { w.window.Hide() }
+func (w *DisplayWindow) PlayPause() {
+	if w.pause {
+		w.nextPageBtn.Disable()
+		w.prevPageBtn.Disable()
+		ticker := time.NewTicker(200 * time.Millisecond)
+		w.timerQ = make(chan struct{})
+		go func() {
+			for {
+				select {
+				case <-ticker.C:
+					if w.currentT >= w.maxT-1 {
+						w.currentT = 0
+					}
+					w.NextStep()
+				case <-w.timerQ:
+					ticker.Stop()
+					return
+				}
+			}
+		}()
+		w.pause = false
+	} else {
+		w.nextPageBtn.Enable()
+		w.prevPageBtn.Enable()
+		close(w.timerQ)
+		w.pause = true
+	}
+}
 func (w *DisplayWindow) PreviousStep() {
-	if w.currentT == w.maxT {
+	if w.pause && w.currentT < w.maxT-1 {
 		w.nextPageBtn.Enable()
 	}
 	w.currentT--
-	w.pageLb.Set(fmt.Sprintf("%d/%d", w.currentT, w.maxT))
-	if w.currentT == 1 {
+	img := w.fieldManager.GetImage(w.currentT, 1080, 720)
+	w.image.SetImage(img)
+	w.pageLb.Set(fmt.Sprintf("%d/%d", w.currentT+1, w.maxT))
+	if w.currentT == 0 {
 		w.prevPageBtn.Disable()
 	}
 }
 func (w *DisplayWindow) NextStep() {
-	if w.currentT == 1 {
+	if w.pause && w.currentT == 0 {
 		w.prevPageBtn.Enable()
 	}
 	w.currentT++
-	w.pageLb.Set(fmt.Sprintf("%d/%d", w.currentT, w.maxT))
-	if w.currentT == w.maxT {
+	img := w.fieldManager.GetImage(w.currentT, 1080, 720)
+	w.image.SetImage(img)
+	w.pageLb.Set(fmt.Sprintf("%d/%d", w.currentT+1, w.maxT))
+	if w.currentT == w.maxT-1 {
 		w.nextPageBtn.Disable()
 	}
 }
 
-func NewImageDisplay(field *data.Field) *ImageDisplay {
-	imageDis := &ImageDisplay{field: field}
-	imageDis.img = canvas.NewImageFromImage(imageDis.updateImage(1080, 720))
+func NewImageDisplay(img image.Image) *ImageDisplay {
+	imageDis := &ImageDisplay{}
+	imageDis.img = canvas.NewImageFromImage(img)
 	imageDis.img.FillMode = canvas.ImageFillOriginal
 	return imageDis
 }
 
-func (imageDis *ImageDisplay) Refresh() {
-	imageDis.img.Image = imageDis.updateImage(1080, 720)
+func (imageDis *ImageDisplay) SetImage(img image.Image) {
+	imageDis.img.Image = img
 	imageDis.img.Refresh()
 }
-func (imageDis *ImageDisplay) GetCanvas() *canvas.Image { return imageDis.img }
 
-func (imageDis *ImageDisplay) updateImage(w, h int) image.Image {
-	imageDis.field.UpdatePosition()
-	return imageDis.field.Image(w, h)
-}
+func (imageDis *ImageDisplay) GetCanvas() *canvas.Image { return imageDis.img }
