@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"io"
+	"os"
 	"strconv"
 	"strings"
 )
@@ -46,4 +47,23 @@ func ReadDataFromFile(r io.Reader) ([][]float64, error) {
 		}
 	}
 	return numbers, nil
+}
+
+func WriteDataToFile(data [][]float64, filename string) error {
+	fo, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := fo.Close(); err != nil {
+			panic(err)
+		}
+	}()
+	for _, l := range data {
+		for _, v := range l {
+			fo.WriteString(strconv.FormatFloat(v, 'e', -1, 64) + " ")
+		}
+		fo.WriteString("/n")
+	}
+	return nil
 }
