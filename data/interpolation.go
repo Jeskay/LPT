@@ -1,8 +1,6 @@
 package data
 
-import (
-	"LPT/interpolation"
-)
+import "LPT/interpolation"
 
 type VelocityTimeField struct {
 	Data        [][]*VelocityTime
@@ -20,6 +18,12 @@ type VelocityTime struct {
 type TimeVelocity struct {
 	time     float64
 	velocity *VelocityField
+}
+
+type CoordinateVelocity struct {
+	velocity float64
+	x        int
+	y        int
 }
 
 func NewVelocityTimeField(fields []*VelocityField) (res *VelocityTimeField) {
@@ -66,13 +70,23 @@ func (timeF *VelocityTimeField) InterpolateT(time, step float64) *VelocityField 
 	data := make([][]float64, len(timeF.Data))
 	for i := range timeF.Data {
 		data[i] = make([]float64, len(timeF.Data[i]))
+	}
+	var c chan CoordinateVelocity = make(chan CoordinateVelocity)
+	for i := range timeF.Data {
 		for j := range timeF.Data[i] {
-			v, err := interpolation.SplineInterpolation(timeData, timeF.Data[i][j].Data, time)
-			if err != nil {
-				panic(err)
-			}
-			data[i][j] = v
+			go func(i int, j int) {
+				v, err := interpolation.SplineInterpolation(timeData, timeF.Data[i][j].Data, time)
+				if err != nil {
+					panic(err)
+				}
+				c <- CoordinateVelocity{velocity: v, x: i, y: j}
+			}(i, j)
 		}
 	}
+	for i := 0; i < len(timeF.Data)*len(timeF.Data[0]); i++ {
+		v := <-c
+		data[v.x][v.y] = v.velocity
+	}
+	close(c)
 	return NewVelocityField(data, time)
 }

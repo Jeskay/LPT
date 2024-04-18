@@ -3,6 +3,7 @@ package interpolation
 import (
 	"errors"
 	"math"
+	"slices"
 
 	"github.com/cnkei/gospline"
 	"github.com/pa-m/sklearn/interpolate"
@@ -23,6 +24,7 @@ func NewBilinearInterpolation(data [][]float64) func(x, y float64) float64 {
 }
 
 func SplineInterpolation(xs, ys []float64, x float64) (float64, error) {
+	slices.Sort(xs)
 	s := gospline.NewCubicSpline(xs, ys)
 	v := s.At(x)
 	if math.IsNaN(v) {

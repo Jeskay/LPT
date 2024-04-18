@@ -25,3 +25,12 @@ func main() {
 	mainWindow.Show()
 	mainApplication.Run()
 }
+
+// func main() {
+// 	u, v := utils.GenerateVelocity(3, -3)
+// 	for i := 0; i < 50; i++ {
+// 		utils.WriteDataToFile(u, "uVelocity"+strconv.Itoa(i)+".dat")
+// 		utils.WriteDataToFile(v, "wVelocity"+strconv.Itoa(i)+".dat")
+// 	}
+
+// }

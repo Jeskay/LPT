@@ -15,6 +15,7 @@ func ReadDataFromFile(r io.Reader) ([][]float64, error) {
 	var currentNumber strings.Builder
 	row := 0
 	counter := 0
+	numbers[0] = make([]float64, 256)
 	for row < 256 {
 		r, _, err := reader.ReadRune()
 		if err != nil {
@@ -25,7 +26,8 @@ func ReadDataFromFile(r io.Reader) ([][]float64, error) {
 		}
 		if r == ' ' || r == '\r' || r == '\n' {
 			if currentNumber.Len() != 0 {
-				num, err := strconv.ParseFloat(currentNumber.String(), 64)
+				str := currentNumber.String()
+				num, err := strconv.ParseFloat(str, 64)
 				if err != nil {
 					fmt.Println(err)
 					return nil, err
@@ -33,8 +35,13 @@ func ReadDataFromFile(r io.Reader) ([][]float64, error) {
 				if counter == 256 {
 					row++
 					counter = 0
+					numbers[row] = make([]float64, 256)
 				}
-				numbers[row] = append(numbers[row], num)
+				numbers[row][counter] = num
+				// u, v := VelocityPointByFraction(float64(row), float64(counter))
+				// if u != num && v != num {
+				// 	fmt.Println("Read ", num, " Utrue ", u, " Vtrue ", v)
+				// }
 				counter++
 				currentNumber.Reset()
 			}
@@ -63,7 +70,6 @@ func WriteDataToFile(data [][]float64, filename string) error {
 		for _, v := range l {
 			fo.WriteString(strconv.FormatFloat(v, 'e', -1, 64) + " ")
 		}
-		fo.WriteString("/n")
 	}
 	return nil
 }

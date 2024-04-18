@@ -23,34 +23,35 @@ func NewParticle(field *FieldManager, x float64, y float64) *Particle {
 	}
 }
 
-func (p *Particle) UpdatePositionAnalytical(t float64) {
+func (p *Particle) UpdatePositionAnalytical(t float64) (float64, float64) {
 	r := math.Sqrt(p.X*p.X + p.Y*p.Y)
 	w := math.Tanh(r) * (1 / math.Cosh(r))
 	polarAngle := math.Atan2(p.Y, p.X)
 	if polarAngle < 0 {
 		polarAngle = polarAngle + math.Pi*2
 	}
-	p.X = r * math.Cos(w*t+polarAngle)
+	newX := r * math.Cos(w*t+polarAngle)
 	p.fieldLock.RLock()
-	if p.X > p.fieldManager.GetSize().MaxAxisX {
-		p.X = p.X - p.fieldManager.GetSize().MaxAxisX
+	if newX > p.fieldManager.GetSize().MaxAxisX {
+		newX = newX - p.fieldManager.GetSize().MaxAxisX
 	}
-	if p.X < p.fieldManager.GetSize().MinAxisX {
-		p.X = p.X - p.fieldManager.GetSize().MinAxisX + p.fieldManager.GetSize().MaxAxisX
+	if newX < p.fieldManager.GetSize().MinAxisX {
+		newX = newX - p.fieldManager.GetSize().MinAxisX + p.fieldManager.GetSize().MaxAxisX
 	}
 	p.fieldLock.RUnlock()
-	p.Y = r * math.Sin(w*t+polarAngle)
+	newY := r * math.Sin(w*t+polarAngle)
 	p.fieldLock.RLock()
-	if p.Y > p.fieldManager.GetSize().MaxAxisY {
-		p.Y = p.Y - p.fieldManager.GetSize().MaxAxisY
+	if newY > p.fieldManager.GetSize().MaxAxisY {
+		newY = newY - p.fieldManager.GetSize().MaxAxisY
 	}
 	if p.Y < p.fieldManager.GetSize().MinAxisY {
-		p.Y = p.Y - p.fieldManager.GetSize().MinAxisY + p.fieldManager.GetSize().MaxAxisY
+		newY = newY - p.fieldManager.GetSize().MinAxisY + p.fieldManager.GetSize().MaxAxisY
 	}
 	p.fieldLock.RUnlock()
+	return newX, newY
 }
 
-func (p *Particle) UpdatePositionRK(t float64) {
+func (p *Particle) UpdatePositionRK(t float64) (float64, float64) {
 	p.fieldLock.RLock()
 	size := p.fieldManager.GetSize()
 	h := p.fieldManager.GetTimeStep()
@@ -60,20 +61,23 @@ func (p *Particle) UpdatePositionRK(t float64) {
 	x2, y2 := p.X+0.5*h*u2, p.Y+0.5*h*v2
 	u3, v3 := p.fieldManager.GetVelocity(x2, y2, t+0.5*h)
 	x3, y3 := p.X+h*u3, p.Y+h*v3
-	u4, v4 := p.fieldManager.GetVelocity(x3, y3, t+0.5*h)
-	p.X += (u1 + 2*u2 + 2*u3 + u4) / 6 * h
-	if p.X > size.MaxAxisX {
-		p.X = size.MinAxisX + (p.X - size.MaxAxisX)
+	u4, v4 := p.fieldManager.GetVelocity(x3, y3, t+h)
+	dX := (u1 + 2*u2 + 2*u3 + u4) * h / 6
+	newX := p.X + dX
+	if newX > size.MaxAxisX {
+		newX = size.MinAxisX + (newX - size.MaxAxisX)
 	}
-	if p.X < size.MinAxisX {
-		p.X = size.MaxAxisX - (p.X - size.MinAxisX)
+	if newX < size.MinAxisX {
+		newX = size.MaxAxisX - (newX - size.MinAxisX)
 	}
-	p.Y += (v1 + 2*v2 + 2*v3 + v4) / 6 * h
-	if p.Y > size.MaxAxisY {
-		p.Y = size.MinAxisY + (p.Y - size.MaxAxisY)
+	dY := (v1 + 2*v2 + 2*v3 + v4) * h / 6
+	newY := p.Y + dY
+	if newY > size.MaxAxisY {
+		newY = size.MinAxisY + (newY - size.MaxAxisY)
 	}
-	if p.Y < size.MinAxisY {
-		p.Y = size.MaxAxisY - (p.Y - size.MinAxisY)
+	if newY < size.MinAxisY {
+		p.Y = size.MaxAxisY - (newY - size.MinAxisY)
 	}
 	p.fieldLock.RUnlock()
+	return newX, newY
 }

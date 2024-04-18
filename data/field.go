@@ -98,19 +98,24 @@ func (fm *FieldManager) GetVelocity(x, y, t float64) (float64, float64) {
 		x = fm.GetSize().MinAxisX + (x - fm.GetSize().MaxAxisX)
 	}
 	if x < fm.GetSize().MinAxisX {
-		x = fm.GetSize().MaxAxisX - (x - fm.GetSize().MinAxisX)
+		x = fm.GetSize().MaxAxisX + (x - fm.GetSize().MinAxisX)
 	}
 	if y > fm.GetSize().MaxAxisY {
 		y = fm.GetSize().MinAxisY + (y - fm.GetSize().MaxAxisY)
 	}
 	if y < fm.GetSize().MinAxisY {
-		y = fm.GetSize().MaxAxisY - (y - fm.GetSize().MinAxisY)
+		y = fm.GetSize().MaxAxisY + (y - fm.GetSize().MinAxisY)
 	}
-	ratioX, rationY := float64(fm.GetVelocityLen()-1)/(fm.GetSize().MaxAxisX-fm.GetSize().MinAxisX), float64(fm.GetVelocityLen()-1)/(fm.GetSize().MaxAxisY-fm.GetSize().MinAxisY)
-	cX, cY := ratioX*(x-fm.GetSize().MinAxisX), rationY*(y-fm.GetSize().MinAxisY)
+	ratioX := float64(fm.GetVelocityLen()-1) / (fm.GetSize().MaxAxisX - fm.GetSize().MinAxisX)
+	ratioY := float64(fm.GetVelocityLen()-1) / (fm.GetSize().MinAxisY - fm.GetSize().MaxAxisY)
+	cX, cY := ratioX*(x-fm.GetSize().MinAxisX), ratioY*(y+fm.GetSize().MinAxisY)
 
 	u := fm.uStorage.fields[t].GetVelocity(cX, cY)
 	w := fm.wStorage.fields[t].GetVelocity(cX, cY)
+	// uft, wft := utils.VelocityPointByFraction(cX, cY)
+	// ut, wt := utils.VelocityPoint(x, y)
+	// fmt.Println("ConvertMiss U ", (uft-ut)/ut, " W ", (wft-wt)/wt)
+	// fmt.Println("Umiss ", (ut-u)/ut, " Wmiss ", (wt-w)/wt)
 	return u, w
 }
 
@@ -133,13 +138,21 @@ func (f Field) GetNextIterationField(timeStep float64) *Field {
 		wg.Add(1)
 		go func(p *Particle, t float64) {
 			defer wg.Done()
-			p.UpdatePositionRK(t)
+			x1, y1 := p.UpdatePositionRK(t)
+			p.X = x1
+			p.Y = y1
 		}(p, timeStep)
 	}
 	wg.Wait()
 	return &f
 	// for _, p := range f.particles {
-	// 	p.UpdatePositionRK(timeStep)
+	// 	x2, y2 := p.UpdatePositionAnalytical(timeStep)
+	// 	x1, y1 := p.UpdatePositionRK(timeStep)
+	// 	if (x1 != x2) || y1 != y2 {
+	// 		fmt.Println(x1, " ", x2, " Y ", y1, " ", y2)
+	// 	}
+	// 	p.X = x1
+	// 	p.Y = y1
 	// }
 	// return &f
 }
@@ -176,6 +189,10 @@ func (vf *VelocityField) GetVelocity(x, y float64) float64 {
 	x1, x2 := int(math.Floor(x)), min(int(math.Ceil(x)), len(vf.Data)-1)
 	y1, y2 := int(math.Floor(y)), min(int(math.Ceil(y)), len(vf.Data[0])-1)
 	v1, v2, v3, v4 := vf.Data[x1][y1], vf.Data[x1][y2], vf.Data[x2][y1], vf.Data[x2][y2]
+	// u1, w1 := utils.VelocityPointByFraction(float64(x2), float64(y1))
+	// if v3 != u1 && v3 != w1 {
+	// 	fmt.Println("Diff U ", (v3-u1)/u1, " W ", (v3-w1)/w1)
+	// }
 	xs := []float64{
 		float64(x1),
 		float64(x1),
@@ -188,5 +205,10 @@ func (vf *VelocityField) GetVelocity(x, y float64) float64 {
 		float64(y2),
 		float64(y2),
 	}
-	return interpolate.Interp2d(xs, ys, []float64{v1, v2, v3, v4})(x, y)
+	vel := interpolate.Interp2d(xs, ys, []float64{v1, v2, v3, v4})(x, y)
+	// u, w := utils.VelocityPointByFraction(x, y)
+	// if u != vel && w != vel {
+	// 	fmt.Println("Vmiss U ", (vel-u)/u, " W ", (vel-w)/w)
+	// }
+	return vel
 }

@@ -29,3 +29,56 @@ func sqDiffUInt8(x, y uint8) uint64 {
 	d := uint64(x) - uint64(y)
 	return d * d
 }
+
+func VelocityPoint(x, y float64) (float64, float64) {
+	r := math.Sqrt(x*x + y*y)
+	Vt := math.Tanh(r) * (1 / math.Cosh(r))
+	pA := math.Atan2(y, x)
+	if pA < 0 {
+		pA = pA + math.Pi*2
+	}
+	return Vt * math.Sin(pA) * (-1), Vt * math.Cos(pA)
+}
+
+func VelocityPointByFraction(x, y float64) (float64, float64) {
+	x1, y1 := VelocityToEuclid(x, y)
+	return VelocityPoint(x1, y1)
+}
+
+func VelocityToNormal(x, y float64) (float64, float64) {
+	vl := 256
+	minL := -3
+	maxL := 3
+	ratioX := float64(vl-1) / (float64(maxL) - float64(minL))
+	ratioY := float64(vl-1) / (float64(minL) - float64(maxL))
+	cX, cY := ratioX*(x-float64(minL)), ratioY*(y+float64(minL))
+	return math.Ceil(cX), math.Ceil(cY)
+}
+
+func VelocityToEuclid(x, y float64) (float64, float64) {
+	maxL := 3
+	minL := -3
+	x1 := x * float64(maxL-minL) / 256
+	y1 := y * float64(minL-maxL) / 256
+	return x1 + float64(minL), y1 - float64(minL)
+}
+
+func GenerateVelocity(maxL, minL float64) ([][]float64, [][]float64) {
+	vel1 := make([][]float64, 256)
+	vel2 := make([][]float64, 256)
+	for i := 0; i < 256; i++ {
+		vel1[i] = make([]float64, 256)
+		vel2[i] = make([]float64, 256)
+		for j := 0; j < 256; j++ {
+			x, y := VelocityToEuclid(float64(i), float64(j))
+			u, w := VelocityPoint(x, y)
+			xn, yn := VelocityToNormal(x, y)
+			if int(xn) != i || int(yn) != j {
+				fmt.Println("ALARM")
+			}
+			fmt.Println("Converted U ", xn, " ", i, " W ", yn, " ", j)
+			vel1[i][j], vel2[i][j] = u, w
+		}
+	}
+	return vel1, vel2
+}
