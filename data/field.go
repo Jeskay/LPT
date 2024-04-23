@@ -13,10 +13,8 @@ import (
 type FieldManager struct {
 	field           *Field
 	images          []image.Image
-	uFields         map[float64]*VelocityField
-	wFields         map[float64]*VelocityField
-	uStorage        *VelocityStorage
-	wStorage        *VelocityStorage
+	uFields         []*VelocityField
+	wFields         []*VelocityField
 	imageIndex      int
 	velocityLen     int
 	timeStep        float64
@@ -57,24 +55,16 @@ func NewFieldManager(params FieldParams, uFields []*VelocityField, wFields []*Ve
 		return nil, errors.New("velocity fields must be the same length")
 	}
 	fManager := &FieldManager{
-		uFields:         make(map[float64]*VelocityField),
-		wFields:         make(map[float64]*VelocityField),
+		uFields:         uFields,
+		wFields:         wFields,
 		velocityLen:     len(uFields[0].Data),
 		timeStep:        params.TimeStep,
 		VelocityRecords: len(uFields),
 		images:          make([]image.Image, len(uFields)),
 	}
-	fManager.wStorage = NewVelocityStorage(NewVelocityTimeField(wFields), fManager.timeStep*0.5, float64(fManager.VelocityRecords*2))
-	fManager.uStorage = NewVelocityStorage(NewVelocityTimeField(uFields), fManager.timeStep*0.5, float64(fManager.VelocityRecords*2))
 	fManager.field = fManager.NewRandomField(params.ParticleCount, params.Size, params.TimeStep)
 	fManager.images[0] = fManager.field.Image(1080, 720)
 	fManager.imageIndex = 0
-	var t float64 = params.TimeStep
-	for i := 1; i < len(uFields); i++ {
-		fManager.uFields[t] = uFields[i]
-		fManager.wFields[t] = wFields[i]
-		t += params.TimeStep
-	}
 	return fManager, nil
 }
 
@@ -109,9 +99,8 @@ func (fm *FieldManager) GetVelocity(x, y, t float64) (float64, float64) {
 	ratioX := float64(fm.GetVelocityLen()-1) / (fm.GetSize().MaxAxisX - fm.GetSize().MinAxisX)
 	ratioY := float64(fm.GetVelocityLen()-1) / (fm.GetSize().MinAxisY - fm.GetSize().MaxAxisY)
 	cX, cY := ratioX*(x-fm.GetSize().MinAxisX), ratioY*(y+fm.GetSize().MinAxisY)
-
-	u := fm.uStorage.fields[t].GetVelocity(cX, cY)
-	w := fm.wStorage.fields[t].GetVelocity(cX, cY)
+	u := InterpolateByT(fm.uFields, fm.timeStep, t, cX, cY)
+	w := InterpolateByT(fm.wFields, fm.timeStep, t, cX, cY)
 	// uft, wft := utils.VelocityPointByFraction(cX, cY)
 	// ut, wt := utils.VelocityPoint(x, y)
 	// fmt.Println("ConvertMiss U ", (uft-ut)/ut, " W ", (wft-wt)/wt)
