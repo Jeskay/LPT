@@ -18,6 +18,7 @@ type FieldManager struct {
 	imageIndex      int
 	velocityLen     int
 	timeStep        float64
+	interStepCount  int
 	VelocityRecords int
 }
 type Field struct {
@@ -39,9 +40,10 @@ type Size struct {
 }
 
 type FieldParams struct {
-	Size          Size
-	ParticleCount int
-	TimeStep      float64
+	Size           Size
+	ParticleCount  int
+	TimeStep       float64
+	InterStepCount int
 }
 
 func NewFieldManager(params FieldParams, uFields []*VelocityField, wFields []*VelocityField) (*FieldManager, error) {
@@ -59,8 +61,9 @@ func NewFieldManager(params FieldParams, uFields []*VelocityField, wFields []*Ve
 		wFields:         wFields,
 		velocityLen:     len(uFields[0].Data),
 		timeStep:        params.TimeStep,
+		interStepCount:  params.InterStepCount,
 		VelocityRecords: len(uFields),
-		images:          make([]image.Image, len(uFields)),
+		images:          make([]image.Image, len(uFields)*params.InterStepCount),
 	}
 	fManager.field = fManager.NewRandomField(params.ParticleCount, params.Size, params.TimeStep)
 	fManager.images[0] = fManager.field.Image(1080, 720)
@@ -68,9 +71,10 @@ func NewFieldManager(params FieldParams, uFields []*VelocityField, wFields []*Ve
 	return fManager, nil
 }
 
-func (fm *FieldManager) GetSize() *Size       { return &fm.field.Size }
-func (fm *FieldManager) GetTimeStep() float64 { return fm.timeStep }
-func (fm *FieldManager) GetVelocityLen() int  { return fm.velocityLen }
+func (fm *FieldManager) GetSize() *Size         { return &fm.field.Size }
+func (fm *FieldManager) GetTimeStep() float64   { return fm.timeStep }
+func (fm *FieldManager) GetInterStepCount() int { return fm.interStepCount }
+func (fm *FieldManager) GetVelocityLen() int    { return fm.velocityLen }
 
 func (fm *FieldManager) GetImage(index, w, h int) image.Image {
 	if index > fm.imageIndex {
@@ -99,8 +103,8 @@ func (fm *FieldManager) GetVelocity(x, y, t float64) (float64, float64) {
 	ratioX := float64(fm.GetVelocityLen()-1) / (fm.GetSize().MaxAxisX - fm.GetSize().MinAxisX)
 	ratioY := float64(fm.GetVelocityLen()-1) / (fm.GetSize().MinAxisY - fm.GetSize().MaxAxisY)
 	cX, cY := ratioX*(x-fm.GetSize().MinAxisX), ratioY*(y+fm.GetSize().MinAxisY)
-	u := InterpolateByT(fm.uFields, fm.timeStep, t, cX, cY)
-	w := InterpolateByT(fm.wFields, fm.timeStep, t, cX, cY)
+	u := InterpolateByT(fm.uFields, fm.interStepCount, fm.timeStep, t, cX, cY)
+	w := InterpolateByT(fm.wFields, fm.interStepCount, fm.timeStep, t, cX, cY)
 	// uft, wft := utils.VelocityPointByFraction(cX, cY)
 	// ut, wt := utils.VelocityPoint(x, y)
 	// fmt.Println("ConvertMiss U ", (uft-ut)/ut, " W ", (wft-wt)/wt)

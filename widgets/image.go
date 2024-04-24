@@ -38,7 +38,7 @@ func NewDisplayWindow(app fyne.App, title string, w, h float32, fieldManager *da
 		window:       app.NewWindow(title),
 		fieldManager: fieldManager,
 		image:        NewImageDisplay(fieldManager.GetImage(0, 1080, 720)),
-		maxT:         fieldManager.VelocityRecords,
+		maxT:         fieldManager.VelocityRecords * fieldManager.GetInterStepCount(),
 		pageLb:       binding.NewString(),
 		pause:        true,
 	}
@@ -65,7 +65,7 @@ func (w *DisplayWindow) PlayPause() {
 	if w.pause {
 		w.nextPageBtn.Disable()
 		w.prevPageBtn.Disable()
-		ticker := time.NewTicker(200 * time.Millisecond)
+		ticker := time.NewTicker(50 * time.Millisecond)
 		w.timerQ = make(chan struct{})
 		go func() {
 			for {
