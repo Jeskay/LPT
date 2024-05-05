@@ -3,12 +3,15 @@ package widgets
 import (
 	"fmt"
 	"os"
+	"sort"
 
 	"LPT/data"
 	"LPT/utils"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -16,16 +19,23 @@ type FileImporter struct {
 	step         float64
 	fields       []*data.VelocityField
 	parentWindow fyne.Window
+	app          fyne.App
+	elem         *fyne.Container
 	button       *widget.Button
+	previewBtn   *widget.Button
 }
 
-func NewFileImporter(window fyne.Window, name string) *FileImporter {
+func NewFileImporter(app fyne.App, window fyne.Window, name string) *FileImporter {
 	fi := &FileImporter{
 		fields:       make([]*data.VelocityField, 0),
 		parentWindow: window,
+		app:          app,
 	}
 	fi.button = widget.NewButton(name, fi.onButton())
+	fi.previewBtn = widget.NewButton("Просмотр", fi.onPreview())
+	fi.elem = container.New(layout.NewHBoxLayout(), fi.button, fi.previewBtn)
 	fi.button.Disable()
+	fi.previewBtn.Disable()
 	return fi
 }
 
@@ -36,7 +46,7 @@ func (fi *FileImporter) SetTimeStep(step float64) {
 	}
 }
 
-func (fi *FileImporter) GetWidget() *widget.Button        { return fi.button }
+func (fi *FileImporter) GetWidget() *fyne.Container       { return fi.elem }
 func (fi *FileImporter) GetFields() []*data.VelocityField { return fi.fields }
 
 func (fi *FileImporter) onButton() func() {
@@ -51,6 +61,7 @@ func (fi *FileImporter) onButton() func() {
 				fmt.Println(err)
 				return
 			}
+			sort.Sort(utils.ByNumericalFilename(readers))
 			var currentTime float64 = 0
 			fi.fields = make([]*data.VelocityField, len(readers))
 			for i, uc := range readers {
@@ -69,5 +80,13 @@ func (fi *FileImporter) onButton() func() {
 				currentTime += fi.step
 			}
 		}, fi.parentWindow)
+		fi.previewBtn.Enable()
+	}
+}
+
+func (fi *FileImporter) onPreview() func() {
+	return func() {
+		w := NewPreviewWindow(fi.app, "Поле скорости", 720, 720, fi.fields)
+		w.Show()
 	}
 }

@@ -7,6 +7,8 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"fyne.io/fyne/v2"
 )
 
 func ReadDataFromFile(r io.Reader) ([][]float64, error) {
@@ -72,4 +74,17 @@ func WriteDataToFile(data [][]float64, filename string) error {
 		}
 	}
 	return nil
+}
+
+type ByNumericalFilename []fyne.URI
+
+func (nf ByNumericalFilename) Len() int      { return len(nf) }
+func (nf ByNumericalFilename) Swap(i, j int) { nf[i], nf[j] = nf[j], nf[i] }
+func (nf ByNumericalFilename) Less(i, j int) bool {
+	pathA := nf[i].Name()
+	pathB := nf[j].Name()
+	if len(pathA) == len(pathB) {
+		return pathA < pathB
+	}
+	return len(pathA) < len(pathB)
 }

@@ -2,10 +2,10 @@ package data
 
 import (
 	"errors"
+	"fmt"
 	"image"
 	"math"
 	"math/rand"
-	"sync"
 
 	"github.com/pa-m/sklearn/interpolate"
 )
@@ -102,13 +102,20 @@ func (fm *FieldManager) GetVelocity(x, y, t float64) (float64, float64) {
 	}
 	ratioX := float64(fm.GetVelocityLen()-1) / (fm.GetSize().MaxAxisX - fm.GetSize().MinAxisX)
 	ratioY := float64(fm.GetVelocityLen()-1) / (fm.GetSize().MinAxisY - fm.GetSize().MaxAxisY)
-	cX, cY := ratioX*(x-fm.GetSize().MinAxisX), ratioY*(y+fm.GetSize().MinAxisY)
+	cX, cY := math.Ceil(ratioX*(x-fm.GetSize().MinAxisX)), math.Ceil(ratioY*(y+fm.GetSize().MinAxisY))
 	u := InterpolateByT(fm.uFields, fm.interStepCount, fm.timeStep, t, cX, cY)
 	w := InterpolateByT(fm.wFields, fm.interStepCount, fm.timeStep, t, cX, cY)
-	// uft, wft := utils.VelocityPointByFraction(cX, cY)
-	// ut, wt := utils.VelocityPoint(x, y)
+	// uft, wft := utils.VelocityPointByFraction(t, cX, cY)
+	// ut, wt := utils.VelocityPoint(t, x, y)
+	// umiss, wmiss := (ut-u)/ut, (wt-w)/w
+	// if math.Abs(umiss) > 0.05 {
+	// 	fmt.Println("ALERT U MISS ", umiss, " ", uft)
+	// }
+	// if math.Abs(wmiss) > 0.05 {
+	// 	fmt.Println("ALERT W MISS ", wmiss, " ", wft)
+	// }
 	// fmt.Println("ConvertMiss U ", (uft-ut)/ut, " W ", (wft-wt)/wt)
-	// fmt.Println("Umiss ", (ut-u)/ut, " Wmiss ", (wt-w)/wt)
+	//fmt.Println("Umiss ", (ut-u)/ut, " Wmiss ", (wt-w)/wt)
 	return u, w
 }
 
@@ -124,30 +131,42 @@ func (fm *FieldManager) NewRandomField(particleCount int, size Size, step float6
 	return field
 }
 
-func (f Field) GetNextIterationField(timeStep float64) *Field {
-	var wg sync.WaitGroup
+func (fm *FieldManager) NewLinearField(particleCount int, size Size, step float64) *Field {
+	field := &Field{Size: size, step: step}
 
-	for _, p := range f.particles {
-		wg.Add(1)
-		go func(p *Particle, t float64) {
-			defer wg.Done()
-			x1, y1 := p.UpdatePositionRK(t)
-			p.X = x1
-			p.Y = y1
-		}(p, timeStep)
+	field.particles = make([]*Particle, particleCount)
+	for i := 0; i < particleCount; i++ {
+		x := field.Size.MinAxisX + rand.Float64()*(field.Size.MaxAxisX-field.Size.MinAxisX)
+		y := 0.0
+		field.particles[i] = NewParticle(fm, x, y)
 	}
-	wg.Wait()
-	return &f
+	return field
+}
+
+func (f Field) GetNextIterationField(timeStep float64) *Field {
+	// var wg sync.WaitGroup
+
 	// for _, p := range f.particles {
-	// 	x2, y2 := p.UpdatePositionAnalytical(timeStep)
-	// 	x1, y1 := p.UpdatePositionRK(timeStep)
-	// 	if (x1 != x2) || y1 != y2 {
-	// 		fmt.Println(x1, " ", x2, " Y ", y1, " ", y2)
-	// 	}
-	// 	p.X = x1
-	// 	p.Y = y1
+	// 	wg.Add(1)
+	// 	go func(p *Particle, t float64) {
+	// 		defer wg.Done()
+	// 		x1, y1 := p.UpdatePositionRK(t)
+	// 		p.X = x1
+	// 		p.Y = y1
+	// 	}(p, timeStep)
 	// }
+	// wg.Wait()
 	// return &f
+	for _, p := range f.particles {
+		x2, y2 := p.UpdatePositionAnalytical(timeStep)
+		x1, y1 := p.UpdatePositionRK(timeStep)
+		if (x1 != x2) || y1 != y2 {
+			fmt.Println(x1, " ", x2, " Y ", y1, " ", y2)
+		}
+		p.X = x1
+		p.Y = y1
+	}
+	return &f
 }
 
 func (f *Field) Image(imageWidth, imageHeight int) image.Image {
@@ -178,7 +197,7 @@ func NewVelocityField(data [][]float64, time float64) *VelocityField {
 	}
 }
 
-func (vf *VelocityField) GetVelocity(x, y float64) float64 {
+func (vf *VelocityField) GetVelocity(x, y, t float64) float64 {
 	x1, x2 := int(math.Floor(x)), min(int(math.Ceil(x)), len(vf.Data)-1)
 	y1, y2 := int(math.Floor(y)), min(int(math.Ceil(y)), len(vf.Data[0])-1)
 	v1, v2, v3, v4 := vf.Data[x1][y1], vf.Data[x1][y2], vf.Data[x2][y1], vf.Data[x2][y2]
@@ -199,7 +218,7 @@ func (vf *VelocityField) GetVelocity(x, y float64) float64 {
 		float64(y2),
 	}
 	vel := interpolate.Interp2d(xs, ys, []float64{v1, v2, v3, v4})(x, y)
-	// u, w := utils.VelocityPointByFraction(x, y)
+	// u, w := utils.VelocityPointByFraction(t, x, y)
 	// if u != vel && w != vel {
 	// 	fmt.Println("Vmiss U ", (vel-u)/u, " W ", (vel-w)/w)
 	// }

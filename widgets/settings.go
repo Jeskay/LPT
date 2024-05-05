@@ -17,10 +17,10 @@ type SettingsMenu struct {
 	submitBtn       *widget.Button
 }
 
-func NewSettingsMenu(window fyne.Window, onChanged func(manager *data.FieldManager)) *SettingsMenu {
+func NewSettingsMenu(app fyne.App, window fyne.Window, onChanged func(manager *data.FieldManager)) *SettingsMenu {
 	sm := &SettingsMenu{
-		uImporter: NewFileImporter(window, "Выбрать файл u"),
-		vImporter: NewFileImporter(window, "Выбрать файл w"),
+		uImporter: NewFileImporter(app, window, "Выбрать файл u"),
+		vImporter: NewFileImporter(app, window, "Выбрать файл w"),
 	}
 	pCountParsed := func(value int) {
 		fmt.Println(value)
@@ -71,8 +71,8 @@ func (sm *SettingsMenu) GetForm() *widget.Form {
 		widget.NewFormItem("Шаг", sm.tStepInput.entry),
 		widget.NewFormItem("Количество шагов между снимками", sm.tInterStepInput.entry),
 		widget.NewFormItem("Количество частиц", sm.pCountInput.entry),
-		widget.NewFormItem("", sm.uImporter.button),
-		widget.NewFormItem("", sm.vImporter.button),
+		widget.NewFormItem("", sm.uImporter.GetWidget()),
+		widget.NewFormItem("", sm.vImporter.GetWidget()),
 		widget.NewFormItem("", sm.submitBtn),
 	)
 	return form

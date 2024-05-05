@@ -20,17 +20,20 @@ func main() {
 		displayWindow = widgets.NewDisplayWindow(mainApplication, "Particle Tracking", 1080, 720, manager)
 		displayWindow.Show()
 	}
-	settingsWindow := widgets.NewSettingsMenu(mainWindow, onChanged)
+	settingsWindow := widgets.NewSettingsMenu(mainApplication, mainWindow, onChanged)
 	mainWindow.SetContent(settingsWindow.GetForm())
 	mainWindow.Show()
 	mainApplication.Run()
 }
 
 // func main() {
-// 	u, v := utils.GenerateVelocity(3, -3)
+// 	step := 0.09
+// 	interSteps := 4
 // 	for i := 0; i < 50; i++ {
-// 		utils.WriteDataToFile(u, "uVelocity"+strconv.Itoa(i)+".dat")
-// 		utils.WriteDataToFile(v, "wVelocity"+strconv.Itoa(i)+".dat")
+// 		t := (float64(i*(interSteps+1)) + 1) * step
+// 		u, v := utils.GenerateVelocity(t, 3, -3)
+// 		utils.WriteDataToFile(u, "uVelocity"+strconv.Itoa(i+1)+".dat")
+// 		utils.WriteDataToFile(v, "wVelocity"+strconv.Itoa(i+1)+".dat")
 // 	}
 
 // }
