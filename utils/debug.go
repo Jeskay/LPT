@@ -37,11 +37,7 @@ func VelocityPoint(t, x, y float64) (float64, float64) {
 	if pA < 0 {
 		pA = pA + math.Pi*2
 	}
-	coef := (0.5 * math.Sin((2*math.Pi)*t))
-	if coef < 0 {
-		return Vt * math.Sin(pA), Vt * math.Cos(pA) * (-1)
-	}
-	return Vt * math.Sin(pA), Vt * math.Cos(pA)
+	return Vt * math.Sin(pA) * (-1), Vt * math.Cos(pA)
 }
 
 func VelocityPointByFraction(t, x, y float64) (float64, float64) {

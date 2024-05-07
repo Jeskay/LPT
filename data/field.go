@@ -2,7 +2,6 @@ package data
 
 import (
 	"errors"
-	"fmt"
 	"image"
 	"math"
 	"math/rand"
@@ -79,7 +78,7 @@ func (fm *FieldManager) GetVelocityLen() int    { return fm.velocityLen }
 func (fm *FieldManager) GetImage(index, w, h int) image.Image {
 	if index > fm.imageIndex {
 		for fm.imageIndex < index {
-			nxtField := fm.field.GetNextIterationField(fm.timeStep)
+			nxtField := fm.field.GetNextIterationField(fm.timeStep * float64(fm.imageIndex))
 			fm.imageIndex++
 			fm.images[fm.imageIndex] = nxtField.Image(w, h)
 		}
@@ -114,8 +113,8 @@ func (fm *FieldManager) GetVelocity(x, y, t float64) (float64, float64) {
 	// if math.Abs(wmiss) > 0.05 {
 	// 	fmt.Println("ALERT W MISS ", wmiss, " ", wft)
 	// }
-	// fmt.Println("ConvertMiss U ", (uft-ut)/ut, " W ", (wft-wt)/wt)
-	//fmt.Println("Umiss ", (ut-u)/ut, " Wmiss ", (wt-w)/wt)
+	// //fmt.Println("ConvertMiss U ", (uft-ut)/ut, " W ", (wft-wt)/wt)
+	// fmt.Println("Umiss ", (ut-u)/ut, " Wmiss ", (wt-w)/wt)
 	return u, w
 }
 
@@ -143,7 +142,7 @@ func (fm *FieldManager) NewLinearField(particleCount int, size Size, step float6
 	return field
 }
 
-func (f Field) GetNextIterationField(timeStep float64) *Field {
+func (f Field) GetNextIterationField(time float64) *Field {
 	// var wg sync.WaitGroup
 
 	// for _, p := range f.particles {
@@ -158,11 +157,11 @@ func (f Field) GetNextIterationField(timeStep float64) *Field {
 	// wg.Wait()
 	// return &f
 	for _, p := range f.particles {
-		x2, y2 := p.UpdatePositionAnalytical(timeStep)
-		x1, y1 := p.UpdatePositionRK(timeStep)
-		if (x1 != x2) || y1 != y2 {
-			fmt.Println(x1, " ", x2, " Y ", y1, " ", y2)
-		}
+		//x2, y2 := p.UpdatePositionAnalytical(timeStep)
+		x1, y1 := p.UpdatePositionEuler(time)
+		// if (x1 != x2) || y1 != y2 {
+		// 	fmt.Println(x1, " ", x2, " Y ", y1, " ", y2)
+		// }
 		p.X = x1
 		p.Y = y1
 	}

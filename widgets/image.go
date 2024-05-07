@@ -65,7 +65,7 @@ func (w *DisplayWindow) PlayPause() {
 	if w.pause {
 		w.nextPageBtn.Disable()
 		w.prevPageBtn.Disable()
-		ticker := time.NewTicker(50 * time.Millisecond)
+		ticker := time.NewTicker(10 * time.Millisecond)
 		w.timerQ = make(chan struct{})
 		go func() {
 			for {

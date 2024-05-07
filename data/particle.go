@@ -81,3 +81,9 @@ func (p *Particle) UpdatePositionRK(t float64) (float64, float64) {
 	p.fieldLock.RUnlock()
 	return newX, newY
 }
+
+func (p *Particle) UpdatePositionEuler(t float64) (float64, float64) {
+	u, v := p.fieldManager.GetVelocity(p.X, p.Y, t)
+	newX, newY := p.X+u*p.fieldManager.GetTimeStep(), p.Y+v*p.fieldManager.GetTimeStep()
+	return newX, newY
+}
