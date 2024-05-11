@@ -15,10 +15,12 @@ func ReadDataFromFile(r io.Reader) ([][]float64, error) {
 	reader := bufio.NewReader(r)
 	var numbers [][]float64 = make([][]float64, 256)
 	var currentNumber strings.Builder
-	row := 0
+	row := 255
 	counter := 0
-	numbers[0] = make([]float64, 256)
-	for row < 256 {
+	for i := 0; i < 256; i++ {
+		numbers[i] = make([]float64, 256)
+	}
+	for row > 0 {
 		r, _, err := reader.ReadRune()
 		if err != nil {
 			if err == io.EOF {
@@ -35,11 +37,10 @@ func ReadDataFromFile(r io.Reader) ([][]float64, error) {
 					return nil, err
 				}
 				if counter == 256 {
-					row++
+					row--
 					counter = 0
-					numbers[row] = make([]float64, 256)
 				}
-				numbers[row][counter] = num
+				numbers[counter][row] = num
 				// u, v := VelocityPointByFraction(float64(row), float64(counter))
 				// if u != num && v != num {
 				// 	fmt.Println("Read ", num, " Utrue ", u, " Vtrue ", v)
