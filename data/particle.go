@@ -84,6 +84,6 @@ func (p *Particle) UpdatePositionRK(t float64) (float64, float64) {
 
 func (p *Particle) UpdatePositionEuler(t float64) (float64, float64) {
 	u, v := p.fieldManager.GetVelocity(p.X, p.Y, t)
-	newX, newY := p.X+u*p.fieldManager.GetTimeStep(), p.Y+v*p.fieldManager.GetTimeStep()
+	newX, newY := p.X+u*p.fieldManager.GetTimeStep()*float64(p.fieldManager.GetInterStepCount()), p.Y+v*p.fieldManager.GetTimeStep()*float64(p.fieldManager.GetInterStepCount())
 	return newX, newY
 }

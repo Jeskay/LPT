@@ -37,8 +37,8 @@ func NewDisplayWindow(app fyne.App, title string, w, h float32, fieldManager *da
 	display := &DisplayWindow{
 		window:       app.NewWindow(title),
 		fieldManager: fieldManager,
-		image:        NewImageDisplay(fieldManager.GetImage(0, 1080, 720)),
-		maxT:         fieldManager.VelocityRecords * fieldManager.GetInterStepCount(),
+		image:        NewImageDisplay(fieldManager.GetImage(0, 1080, 1080)),
+		maxT:         fieldManager.VelocityRecords,
 		pageLb:       binding.NewString(),
 		pause:        true,
 	}
@@ -94,7 +94,7 @@ func (w *DisplayWindow) PreviousStep() {
 		w.nextPageBtn.Enable()
 	}
 	w.currentT--
-	img := w.fieldManager.GetImage(w.currentT, 1080, 720)
+	img := w.fieldManager.GetImage(w.currentT, 1080, 1080)
 	w.image.SetImage(img)
 	w.pageLb.Set(fmt.Sprintf("%d/%d", w.currentT+1, w.maxT))
 	if w.currentT == 0 {
@@ -106,7 +106,7 @@ func (w *DisplayWindow) NextStep() {
 		w.prevPageBtn.Enable()
 	}
 	w.currentT++
-	img := w.fieldManager.GetImage(w.currentT, 1080, 720)
+	img := w.fieldManager.GetImage(w.currentT, 1080, 1080)
 	w.image.SetImage(img)
 	w.pageLb.Set(fmt.Sprintf("%d/%d", w.currentT+1, w.maxT))
 	if w.currentT == w.maxT-1 {

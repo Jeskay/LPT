@@ -6,6 +6,7 @@ import (
 	"math"
 	"math/rand"
 
+	"github.com/nfnt/resize"
 	"github.com/pa-m/sklearn/interpolate"
 )
 
@@ -65,7 +66,7 @@ func NewFieldManager(params FieldParams, uFields []*VelocityField, wFields []*Ve
 		images:          make([]image.Image, len(uFields)*params.InterStepCount),
 	}
 	fManager.field = fManager.NewRandomField(params.ParticleCount, params.Size, params.TimeStep)
-	fManager.images[0] = fManager.field.Image(1080, 720)
+	fManager.images[0] = resize.Resize(uint(1080), uint(1080), fManager.field.Image(500, 500), resize.Bilinear)
 	fManager.imageIndex = 0
 	return fManager, nil
 }
@@ -78,9 +79,10 @@ func (fm *FieldManager) GetVelocityLen() int    { return fm.velocityLen }
 func (fm *FieldManager) GetImage(index, w, h int) image.Image {
 	if index > fm.imageIndex {
 		for fm.imageIndex < index {
-			nxtField := fm.field.GetNextIterationField(fm.timeStep * float64(fm.imageIndex))
+			nxtField := fm.field.GetNextIterationField(fm.timeStep * float64(fm.interStepCount) * float64(fm.imageIndex))
 			fm.imageIndex++
-			fm.images[fm.imageIndex] = nxtField.Image(w, h)
+			img := nxtField.Image(500, 500)
+			fm.images[fm.imageIndex] = resize.Resize(uint(w), uint(h), img, resize.Bilinear)
 		}
 	}
 	return fm.images[index]
