@@ -21,6 +21,7 @@ type FileImporter struct {
 	parentWindow fyne.Window
 	app          fyne.App
 	elem         *fyne.Container
+	prgBar       *widget.ProgressBar
 	button       *widget.Button
 	previewBtn   *widget.Button
 }
@@ -33,7 +34,13 @@ func NewFileImporter(app fyne.App, window fyne.Window, name string) *FileImporte
 	}
 	fi.button = widget.NewButton(name, fi.onButton())
 	fi.previewBtn = widget.NewButton("Просмотр", fi.onPreview())
-	fi.elem = container.New(layout.NewHBoxLayout(), fi.button, fi.previewBtn)
+	fi.prgBar = widget.NewProgressBar()
+	fi.elem = container.New(
+		layout.NewVBoxLayout(),
+		container.New(layout.NewHBoxLayout(), fi.button, fi.previewBtn),
+		fi.prgBar,
+	)
+	fi.prgBar.Hide()
 	fi.button.Disable()
 	fi.previewBtn.Disable()
 	return fi
@@ -61,6 +68,7 @@ func (fi *FileImporter) onButton() func() {
 				fmt.Println(err)
 				return
 			}
+			fi.prgBar.Show()
 			sort.Sort(utils.ByNumericalFilename(readers))
 			var currentTime float64 = 0
 			fi.fields = make([]*data.VelocityField, len(readers))
@@ -78,7 +86,10 @@ func (fi *FileImporter) onButton() func() {
 				}
 				fi.fields[i] = data.NewVelocityField(d, currentTime)
 				currentTime += fi.step
+				fi.prgBar.SetValue(float64(i) / float64(len(readers)))
 			}
+			fi.prgBar.Hide()
+			fi.button.SetText(lUri.Name())
 		}, fi.parentWindow)
 		fi.previewBtn.Enable()
 	}
