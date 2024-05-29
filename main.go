@@ -27,6 +27,22 @@ func main() {
 }
 
 // func main() {
+// 	w := mainApplication.NewWindow("DEMO")
+// 	img := image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{500, 500}})
+// 	for i := 0; i < 500; i++ {
+// 		for j := 0; j < 500; j++ {
+// 			img.Set(i, j, color.RGBA{0, 100, 0, 0xff})
+// 		}
+// 	}
+// 	onDrag := func(imageDisplay *widgets.ImageDisplay, p fyne.Position) {
+// 		img.Set(int(p.X), int(p.Y), color.Black)
+// 		imageDisplay.SetImage(img)
+// 	}
+// 	w.SetContent(widgets.NewImageDisplay(img, onDrag))
+// 	w.ShowAndRun()
+// }
+
+// func main() {
 // 	step := 0.09
 // 	interSteps := 4
 // 	for i := 0; i < 50; i++ {

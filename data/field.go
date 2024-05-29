@@ -3,6 +3,7 @@ package data
 import (
 	"errors"
 	"image"
+	"image/color"
 	"math"
 	"math/rand"
 
@@ -75,8 +76,15 @@ func (fm *FieldManager) GetSize() *Size         { return &fm.field.Size }
 func (fm *FieldManager) GetTimeStep() float64   { return fm.timeStep }
 func (fm *FieldManager) GetInterStepCount() int { return fm.interStepCount }
 func (fm *FieldManager) GetVelocityLen() int    { return fm.velocityLen }
+func (fm *FieldManager) SetColor(x, y float64, color color.RGBA, radius float64) {
+	for _, p := range fm.field.particles {
+		if math.Pow(x-p.X, 2)+math.Pow(y-p.Y, 2) < radius*radius {
+			p.Color = color
+		}
+	}
+}
 
-func (fm *FieldManager) GetImage(index, w, h int) image.Image {
+func (fm *FieldManager) GetImageById(index, w, h int) image.Image {
 	if index > fm.imageIndex {
 		for fm.imageIndex < index {
 			nxtField := fm.field.GetNextIterationField(fm.timeStep * float64(fm.interStepCount) * float64(fm.imageIndex))
@@ -86,6 +94,11 @@ func (fm *FieldManager) GetImage(index, w, h int) image.Image {
 		}
 	}
 	return fm.images[index]
+}
+
+func (fm *FieldManager) GetCurrentFieldImage(w, h int) image.Image {
+	img := fm.field.Image(500, 500)
+	return resize.Resize(uint(w), uint(h), img, resize.Bilinear)
 }
 
 func (fm *FieldManager) GetVelocity(x, y, t float64) (float64, float64) {
@@ -172,7 +185,7 @@ func (f Field) GetNextIterationField(time float64) *Field {
 
 func (f *Field) Image(imageWidth, imageHeight int) image.Image {
 	width := f.Size.MaxAxisX - f.Size.MinAxisX
-	height := f.Size.MaxAxisY - f.Size.MinAxisY
+	height := f.Size.MinAxisY - f.Size.MaxAxisY
 
 	widthCoef := float64(imageWidth) / width
 	heightCoef := float64(imageHeight) / height
@@ -183,8 +196,8 @@ func (f *Field) Image(imageWidth, imageHeight int) image.Image {
 	})
 
 	for _, particle := range f.particles {
-		x := widthCoef * (particle.X + width*0.5)
-		y := heightCoef * (particle.Y + height*0.5)
+		x := widthCoef * (particle.X - f.Size.MinAxisX)
+		y := heightCoef * (particle.Y + f.Size.MinAxisY)
 		img.SetRGBA(int(x), int(y), particle.Color)
 	}
 

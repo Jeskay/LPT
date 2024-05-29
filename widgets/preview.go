@@ -30,7 +30,7 @@ func NewPreviewWindow(app fyne.App, title string, w, h float32, fields []*data.V
 	preview := &PreviewWindow{
 		window: app.NewWindow(title),
 		fields: fields,
-		image:  NewImageDisplay(data.NewGradientFromField(fields[0], 720, 720)),
+		image:  NewImageDisplay(data.NewGradientFromField(fields[0], 720, 720), nil),
 		pause:  true,
 		pageLb: binding.NewString(),
 	}
