@@ -16,11 +16,11 @@ import (
 )
 
 type FileImporter struct {
+	widget.BaseWidget
 	step         float64
 	fields       []*data.VelocityField
 	parentWindow fyne.Window
 	app          fyne.App
-	elem         *fyne.Container
 	progressBar  *widget.ProgressBar
 	button       *widget.Button
 	previewBtn   *widget.Button
@@ -35,14 +35,10 @@ func NewFileImporter(app fyne.App, window fyne.Window, name string) *FileImporte
 	fi.button = widget.NewButton(name, fi.onButton())
 	fi.previewBtn = widget.NewButton("Просмотр", fi.onPreview())
 	fi.progressBar = widget.NewProgressBar()
-	fi.elem = container.New(
-		layout.NewVBoxLayout(),
-		container.New(layout.NewHBoxLayout(), fi.button, fi.previewBtn),
-		fi.progressBar,
-	)
 	fi.progressBar.Hide()
 	fi.button.Disable()
 	fi.previewBtn.Disable()
+	fi.ExtendBaseWidget(fi)
 	return fi
 }
 
@@ -53,7 +49,6 @@ func (fi *FileImporter) SetTimeStep(step float64) {
 	}
 }
 
-func (fi *FileImporter) GetWidget() *fyne.Container       { return fi.elem }
 func (fi *FileImporter) GetFields() []*data.VelocityField { return fi.fields }
 
 func (fi *FileImporter) onButton() func() {
@@ -100,4 +95,13 @@ func (fi *FileImporter) onPreview() func() {
 		w := NewPreviewWindow(fi.app, "Поле скорости", 720, 720, fi.fields)
 		w.Show()
 	}
+}
+
+func (fi *FileImporter) CreateRenderer() fyne.WidgetRenderer {
+	c := container.New(
+		layout.NewVBoxLayout(),
+		container.New(layout.NewHBoxLayout(), fi.button, fi.previewBtn),
+		fi.progressBar,
+	)
+	return widget.NewSimpleRenderer(c)
 }

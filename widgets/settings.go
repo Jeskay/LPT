@@ -68,11 +68,11 @@ func NewSettingsMenu(app fyne.App, window fyne.Window, onChanged func(manager *d
 
 func (sm *SettingsMenu) GetForm() *widget.Form {
 	form := widget.NewForm(
-		widget.NewFormItem("Шаг", sm.tStepInput.entry),
-		widget.NewFormItem("Количество шагов между снимками", sm.tInterStepInput.entry),
-		widget.NewFormItem("Количество частиц", sm.pCountInput.entry),
-		widget.NewFormItem("", sm.uImporter.GetWidget()),
-		widget.NewFormItem("", sm.vImporter.GetWidget()),
+		widget.NewFormItem("Шаг", sm.tStepInput),
+		widget.NewFormItem("Количество шагов между снимками", sm.tInterStepInput),
+		widget.NewFormItem("Количество частиц", sm.pCountInput),
+		widget.NewFormItem("", sm.uImporter),
+		widget.NewFormItem("", sm.vImporter),
 		widget.NewFormItem("", sm.submitBtn),
 	)
 	return form

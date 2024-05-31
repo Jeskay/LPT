@@ -3,10 +3,12 @@ package widgets
 import (
 	"strconv"
 
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/widget"
 )
 
 type ParsedIntEntry struct {
+	widget.BaseWidget
 	value    int
 	entry    *widget.Entry
 	onFailed func(input string, err error)
@@ -14,6 +16,7 @@ type ParsedIntEntry struct {
 }
 
 type ParsedFloatEntry struct {
+	widget.BaseWidget
 	value    float64
 	entry    *widget.Entry
 	onFailed func(input string, err error)
@@ -28,6 +31,14 @@ func (pe *ParsedIntEntry) parse(input string) {
 	}
 	pe.value = v
 	pe.onParsed(v)
+}
+
+func (pe *ParsedIntEntry) CreateRenderer() fyne.WidgetRenderer {
+	return widget.NewSimpleRenderer(pe.entry)
+}
+
+func (pe *ParsedFloatEntry) CreateRenderer() fyne.WidgetRenderer {
+	return widget.NewSimpleRenderer(pe.entry)
 }
 
 func (pe *ParsedFloatEntry) parse(input string) {
@@ -50,6 +61,7 @@ func NewParsedIntEntry(onParsed func(value int), onFailed func(input string, err
 		onParsed: onParsed,
 	}
 	pe.entry.OnChanged = pe.parse
+	pe.ExtendBaseWidget(pe)
 	return pe
 }
 
@@ -60,5 +72,6 @@ func NewParsedFloatEntry(onParsed func(value float64), onFailed func(input strin
 		onParsed: onParsed,
 	}
 	pe.entry.OnChanged = pe.parse
+	pe.ExtendBaseWidget(pe)
 	return pe
 }
