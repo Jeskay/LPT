@@ -48,11 +48,11 @@ func NewDisplayMenuWidget(fieldManager *data.FieldManager, width, height float32
 		x := (float64(p.X) * (maxL - minL) / float64(i.img.Image.Bounds().Dx())) + minL
 		y := (float64(p.Y) * (minL - maxL) / float64(i.img.Image.Bounds().Dy())) - minL
 		radius := rad * (maxL - minL) / float64(i.img.Image.Bounds().Dx())
-		w.fieldManager.SetColor(x, y, color.RGBA{0, 0, 255, 0xff}, radius)
+		w.fieldManager.Field.SetColor(x, y, color.RGBA{0, 0, 255, 0xff}, radius)
 		img := w.fieldManager.GetCurrentFieldImage(1080, 1080)
 		w.image.SetImage(img)
 	}
-	w.image = NewImageDisplay(fieldManager.GetImageById(0, 1080, 1080), onDrag)
+	w.image = NewImageDisplay(fieldManager.GetImageById(0, 1080, 1080), 30, onDrag)
 	w.pageLb.Set(fmt.Sprintf("%d/%d", w.currentT+1, w.maxT))
 	w.prevPageBtn = widget.NewButtonWithIcon("", theme.MediaFastRewindIcon(), w.PreviousStep)
 	w.nextPageBtn = widget.NewButtonWithIcon("", theme.MediaFastForwardIcon(), w.NextStep)

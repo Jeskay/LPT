@@ -18,21 +18,23 @@ type ImageDisplay struct {
 	onDrag    func(imageDisplay *ImageDisplay, p fyne.Position)
 	isKeyDown bool
 	painting  bool
+	crclSize  fyne.Size
 }
 
-func NewImageDisplay(img image.Image, onDrag func(imageDisplay *ImageDisplay, p fyne.Position)) *ImageDisplay {
+func NewImageDisplay(img image.Image, radius float32, onDrag func(imageDisplay *ImageDisplay, p fyne.Position)) *ImageDisplay {
 	imageDis := &ImageDisplay{
 		img:       canvas.NewImageFromImage(img),
 		circle:    canvas.NewCircle(color.Transparent),
 		onDrag:    onDrag,
 		isKeyDown: false,
 		painting:  onDrag != nil,
+		crclSize:  fyne.NewSize(radius, radius),
 	}
 	imageDis.img.SetMinSize(fyne.NewSize(float32(img.Bounds().Dx()), float32(img.Bounds().Dy())))
 	imageDis.img.Resize(imageDis.img.MinSize())
 	imageDis.img.Refresh()
 	imageDis.img.FillMode = canvas.ImageFillOriginal
-	imageDis.circle.Resize(fyne.NewSize(30, 30))
+	imageDis.circle.Resize(imageDis.crclSize)
 	imageDis.circle.StrokeWidth = 2
 	imageDis.circle.StrokeColor = color.Black
 	if !imageDis.painting {
@@ -50,6 +52,12 @@ func (imageDis *ImageDisplay) SetImage(img image.Image) {
 func (imageDis *ImageDisplay) HideCircle() {
 	imageDis.painting = false
 	imageDis.circle.Hide()
+}
+
+func (imageDis *ImageDisplay) SetRadius(value float32) {
+	imageDis.crclSize = fyne.NewSize(value, value)
+	imageDis.circle.Resize(imageDis.crclSize)
+	imageDis.circle.Refresh()
 }
 
 func (imageDis *ImageDisplay) ShowCircle() {

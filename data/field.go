@@ -2,14 +2,15 @@ package data
 
 import (
 	"image"
+	"image/color"
 	"math"
+	"math/rand"
 
 	"github.com/pa-m/sklearn/interpolate"
 )
 
 type Field struct {
 	particles []*Particle
-	step      float64
 	Size      Size
 }
 
@@ -27,12 +28,39 @@ type Size struct {
 
 type FieldParams struct {
 	Size           Size
-	ParticleCount  int
 	TimeStep       float64
 	InterStepCount int
 }
 
-func (f Field) GetNextIterationField(time float64) *Field {
+func NewEmptyField(size Size) *Field {
+	return &Field{Size: size, particles: make([]*Particle, 0)}
+}
+
+func NewRandomField(particleCount int, size Size) *Field {
+	field := &Field{Size: size}
+
+	field.particles = make([]*Particle, particleCount)
+	for i := 0; i < particleCount; i++ {
+		x := field.Size.MinAxisX + rand.Float64()*(field.Size.MaxAxisX-field.Size.MinAxisX)
+		y := field.Size.MinAxisY + rand.Float64()*(field.Size.MaxAxisY-field.Size.MinAxisY)
+		field.particles[i] = NewParticle(x, y)
+	}
+	return field
+}
+
+func NewLinearField(particleCount int, size Size) *Field {
+	field := &Field{Size: size}
+
+	field.particles = make([]*Particle, particleCount)
+	for i := 0; i < particleCount; i++ {
+		x := field.Size.MinAxisX + rand.Float64()*(field.Size.MaxAxisX-field.Size.MinAxisX)
+		y := 0.0
+		field.particles[i] = NewParticle(x, y)
+	}
+	return field
+}
+
+func (f Field) GetNextIterationField(time float64, manager *FieldManager) *Field {
 	// var wg sync.WaitGroup
 
 	// for _, p := range f.particles {
@@ -48,7 +76,7 @@ func (f Field) GetNextIterationField(time float64) *Field {
 	// return &f
 	for _, p := range f.particles {
 		//x2, y2 := p.UpdatePositionAnalytical(timeStep)
-		x1, y1 := p.UpdatePositionEuler(time)
+		x1, y1 := p.UpdatePositionEuler(time, manager)
 		// if (x1 != x2) || y1 != y2 {
 		// 	fmt.Println(x1, " ", x2, " Y ", y1, " ", y2)
 		// }
@@ -77,6 +105,24 @@ func (f *Field) Image(imageWidth, imageHeight int) image.Image {
 	}
 
 	return img
+}
+
+func (f *Field) AddParticles(particleCount int, x, y, radius float64) {
+	for i := 0; i < particleCount; i++ {
+		r := radius / 2 * math.Sqrt(rand.Float64())
+		theta := rand.Float64() * 2 * math.Pi
+		pX := x + r*math.Cos(theta)
+		pY := y + r*math.Sin(theta)
+		f.particles = append(f.particles, NewParticle(pX, pY))
+	}
+}
+
+func (f *Field) SetColor(x, y float64, color color.RGBA, radius float64) {
+	for _, p := range f.particles {
+		if math.Pow(x-p.X, 2)+math.Pow(y-p.Y, 2) < radius*radius {
+			p.Color = color
+		}
+	}
 }
 
 func NewVelocityField(data [][]float64, time float64) *VelocityField {

@@ -11,24 +11,29 @@ import (
 type SettingsMenu struct {
 	uImporter       *FileImporter
 	vImporter       *FileImporter
-	pCountInput     *ParsedIntEntry
 	tStepInput      *ParsedFloatEntry
 	tInterStepInput *ParsedIntEntry
+	editBtn         *widget.Button
 	submitBtn       *widget.Button
+	field           *data.Field
+	manager         *data.FieldManager
+}
+
+var defaultParams = data.FieldParams{
+	Size: data.Size{
+		MinAxisX: -3,
+		MaxAxisX: 3,
+		MinAxisY: -3,
+		MaxAxisY: 3,
+	},
 }
 
 func NewSettingsMenu(app fyne.App, window fyne.Window, onChanged func(manager *data.FieldManager)) *SettingsMenu {
 	sm := &SettingsMenu{
 		uImporter: NewFileImporter(app, window, "Выбрать файл u"),
 		vImporter: NewFileImporter(app, window, "Выбрать файл w"),
+		field:     data.NewEmptyField(defaultParams.Size),
 	}
-	pCountParsed := func(value int) {
-		fmt.Println(value)
-	}
-	pCountFailed := func(input string, err error) {
-		fmt.Println(err)
-	}
-	sm.pCountInput = NewParsedIntEntry(pCountParsed, pCountFailed)
 	tStepParsed := func(value float64) {
 		sm.uImporter.SetTimeStep(value)
 		sm.vImporter.SetTimeStep(value)
@@ -44,10 +49,13 @@ func NewSettingsMenu(app fyne.App, window fyne.Window, onChanged func(manager *d
 		fmt.Println(err)
 	}
 	sm.tInterStepInput = NewParsedIntEntry(tInterStepParsed, tInterStepFailed)
+	sm.editBtn = widget.NewButton("Редактировать поле", func() {
+		menu := NewEditMenu(app, "Field Editor", 1080, 720, sm.field)
+		menu.window.Show()
+	})
 	sm.submitBtn = widget.NewButton("Применить", func() {
-		step, interStepCount, particleCount, uFields, vFields := sm.GetData()
+		step, interStepCount, uFields, vFields := sm.GetData()
 		params := data.FieldParams{
-			ParticleCount: particleCount,
 			Size: data.Size{
 				MinAxisX: -3,
 				MaxAxisX: 3,
@@ -57,11 +65,12 @@ func NewSettingsMenu(app fyne.App, window fyne.Window, onChanged func(manager *d
 			TimeStep:       step,
 			InterStepCount: interStepCount,
 		}
-		fieldManager, err := data.NewFieldManager(params, uFields, vFields)
+		fieldManager, err := data.NewFieldManager(params, sm.field, uFields, vFields)
 		if err != nil {
 			panic(err)
 		}
-		onChanged(fieldManager)
+		sm.manager = fieldManager
+		onChanged(sm.manager)
 	})
 	return sm
 }
@@ -70,18 +79,17 @@ func (sm *SettingsMenu) GetForm() *widget.Form {
 	form := widget.NewForm(
 		widget.NewFormItem("Шаг", sm.tStepInput),
 		widget.NewFormItem("Количество шагов между снимками", sm.tInterStepInput),
-		widget.NewFormItem("Количество частиц", sm.pCountInput),
 		widget.NewFormItem("", sm.uImporter),
 		widget.NewFormItem("", sm.vImporter),
+		widget.NewFormItem("", sm.editBtn),
 		widget.NewFormItem("", sm.submitBtn),
 	)
 	return form
 }
 
-func (sm *SettingsMenu) GetData() (step float64, interStepCount, particleCount int, uField []*data.VelocityField, vField []*data.VelocityField) {
+func (sm *SettingsMenu) GetData() (step float64, interStepCount int, uField []*data.VelocityField, vField []*data.VelocityField) {
 	step = sm.tStepInput.GetValue()
 	interStepCount = sm.tInterStepInput.GetValue()
-	particleCount = sm.pCountInput.GetValue()
 	uField = sm.uImporter.GetFields()
 	vField = sm.vImporter.GetFields()
 	return
