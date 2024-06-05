@@ -121,7 +121,7 @@ func (edit *EditWidget) onRandom() {
 		MinAxisY: -3,
 		MaxAxisY: 3,
 	}
-	edit.field = data.NewRandomField(amount, size)
+	*edit.field = *data.NewRandomField(amount, size)
 	edit.updateImage()
 }
 func (edit *EditWidget) onLinear() {
@@ -135,7 +135,7 @@ func (edit *EditWidget) onLinear() {
 		MinAxisY: -3,
 		MaxAxisY: 3,
 	}
-	edit.field = data.NewLinearField(amount, size)
+	*edit.field = *data.NewLinearField(amount, size)
 	edit.updateImage()
 }
 

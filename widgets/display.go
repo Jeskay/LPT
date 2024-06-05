@@ -3,7 +3,6 @@ package widgets
 import (
 	"LPT/data"
 	"fmt"
-	"image/color"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -41,18 +40,7 @@ func NewDisplayMenuWidget(fieldManager *data.FieldManager, width, height float32
 		maxT:         fieldManager.VelocityRecords,
 		pageLb:       binding.NewString(),
 	}
-	onDrag := func(i *ImageDisplay, p fyne.Position) {
-		const minL float64 = -3
-		const maxL float64 = 3
-		const rad float64 = 30
-		x := (float64(p.X) * (maxL - minL) / float64(i.img.Image.Bounds().Dx())) + minL
-		y := (float64(p.Y) * (minL - maxL) / float64(i.img.Image.Bounds().Dy())) - minL
-		radius := rad * (maxL - minL) / float64(i.img.Image.Bounds().Dx())
-		w.fieldManager.Field.SetColor(x, y, color.RGBA{0, 0, 255, 0xff}, radius)
-		img := w.fieldManager.GetCurrentFieldImage(1080, 1080)
-		w.image.SetImage(img)
-	}
-	w.image = NewImageDisplay(fieldManager.GetImageById(0, 1080, 1080), 30, onDrag)
+	w.image = NewImageDisplay(fieldManager.GetImageById(0, 1080, 1080), 30, nil)
 	w.pageLb.Set(fmt.Sprintf("%d/%d", w.currentT+1, w.maxT))
 	w.prevPageBtn = widget.NewButtonWithIcon("", theme.MediaFastRewindIcon(), w.PreviousStep)
 	w.nextPageBtn = widget.NewButtonWithIcon("", theme.MediaFastForwardIcon(), w.NextStep)
