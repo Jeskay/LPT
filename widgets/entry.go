@@ -1,9 +1,12 @@
 package widgets
 
 import (
+	"math"
 	"strconv"
 
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -23,6 +26,15 @@ type ParsedFloatEntry struct {
 	onParsed func(value float64)
 }
 
+type IntSlider struct {
+	widget.BaseWidget
+	min      int
+	max      int
+	value    binding.Float
+	strValue binding.String
+	onChange func(int)
+}
+
 func (pe *ParsedIntEntry) parse(input string) {
 	v, err := strconv.Atoi(pe.entry.Text)
 	if err != nil {
@@ -39,6 +51,12 @@ func (pe *ParsedIntEntry) CreateRenderer() fyne.WidgetRenderer {
 
 func (pe *ParsedFloatEntry) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(pe.entry)
+}
+
+func (s *IntSlider) CreateRenderer() fyne.WidgetRenderer {
+	slider := widget.NewSliderWithData(float64(s.min), float64(s.max), s.value)
+	c := container.NewVBox(slider, container.NewCenter(widget.NewLabelWithData(s.strValue)))
+	return widget.NewSimpleRenderer(c)
 }
 
 func (pe *ParsedFloatEntry) parse(input string) {
@@ -74,4 +92,25 @@ func NewParsedFloatEntry(onParsed func(value float64), onFailed func(input strin
 	pe.entry.OnChanged = pe.parse
 	pe.ExtendBaseWidget(pe)
 	return pe
+}
+
+func NewIntSlider(onChange func(int), min int, max int) *IntSlider {
+	s := &IntSlider{
+		onChange: onChange,
+		min:      min,
+		max:      max,
+		value:    binding.NewFloat(),
+		strValue: binding.NewString(),
+	}
+	s.value.AddListener(binding.NewDataListener(func() {
+		v, err := s.value.Get()
+		if err != nil {
+			return
+		}
+		iv := int(math.Round(v))
+		s.strValue.Set(strconv.Itoa(iv))
+		s.onChange(iv)
+	}))
+	s.ExtendBaseWidget(s)
+	return s
 }

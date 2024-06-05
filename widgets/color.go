@@ -31,6 +31,7 @@ func NewColorPickerWidget(window fyne.Window, onPick func(color.RGBA)) *ColorPic
 		cPicker.colorDis.Refresh()
 	}
 	cPicker.picker = dialog.NewColorPicker("Color", "", clback, cPicker.window)
+	cPicker.picker.Advanced = true
 	cPicker.colorDis.Resize(fyne.NewSize(10, 10))
 	cPicker.colorDis.StrokeWidth = 1
 	cPicker.colorDis.StrokeColor = color.Black

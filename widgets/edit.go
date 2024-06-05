@@ -2,7 +2,6 @@ package widgets
 
 import (
 	"LPT/data"
-	"fmt"
 	"image/color"
 
 	"fyne.io/fyne/v2"
@@ -76,9 +75,10 @@ func (edit *EditWidget) CreateRenderer() fyne.WidgetRenderer {
 			modeGroup,
 			widget.NewButton("Случайная генерация", edit.onRandom),
 			widget.NewButton("Генерация вдоль оси X", edit.onLinear),
+			widget.NewButton("Очистить", edit.onClear),
 			edit.colorPicker,
-			container.NewHBox(widget.NewLabel("Количество частиц"), NewParsedIntEntry(edit.onAmountParsed, edit.onAmountFailed)),
-			container.NewHBox(widget.NewLabel("Радиус выделения"), NewParsedIntEntry(edit.onRadiusParsed, edit.onRadiusFailed)),
+			container.NewVBox(widget.NewLabel("Количество частиц"), NewIntSlider(edit.onAmountParsed, 1, 10000)),
+			container.NewVBox(widget.NewLabel("Радиус выделения"), NewIntSlider(edit.onRadiusParsed, 5, 500)),
 		),
 	)
 	return widget.NewSimpleRenderer(c)
@@ -138,16 +138,22 @@ func (edit *EditWidget) onLinear() {
 	edit.field = data.NewLinearField(amount, size)
 	edit.updateImage()
 }
+
+func (edit *EditWidget) onClear() {
+	size := data.Size{
+		MinAxisX: -3,
+		MaxAxisX: 3,
+		MinAxisY: -3,
+		MaxAxisY: 3,
+	}
+	edit.field = data.NewEmptyField(size)
+	edit.updateImage()
+}
+
 func (edit *EditWidget) onAmountParsed(value int) {
 	edit.particleAmount.Set(value)
-}
-func (edit *EditWidget) onAmountFailed(input string, err error) {
-	fmt.Println(err)
 }
 func (edit *EditWidget) onRadiusParsed(value int) {
 	edit.spawnRadius.Set(value)
 	edit.image.SetRadius(float32(value))
-}
-func (edit *EditWidget) onRadiusFailed(input string, err error) {
-	fmt.Println(err)
 }
