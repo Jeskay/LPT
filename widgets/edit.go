@@ -146,7 +146,7 @@ func (edit *EditWidget) onClear() {
 		MinAxisY: -3,
 		MaxAxisY: 3,
 	}
-	edit.field = data.NewEmptyField(size)
+	*edit.field = *data.NewEmptyField(size)
 	edit.updateImage()
 }
 
