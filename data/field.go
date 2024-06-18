@@ -1,6 +1,7 @@
 package data
 
 import (
+	"LPT/utils"
 	"image"
 	"image/color"
 	"math"
@@ -104,7 +105,7 @@ func (f *Field) Image(imageWidth, imageHeight int) image.Image {
 		img.SetRGBA(int(x), int(y), particle.Color)
 	}
 
-	return img
+	return utils.DrawAxis(img, f.Size.MinAxisX, f.Size.MaxAxisX, f.Size.MinAxisY, f.Size.MaxAxisY)
 }
 
 func (f *Field) AddParticles(particleCount int, x, y, radius float64) {

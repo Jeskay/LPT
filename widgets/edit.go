@@ -115,12 +115,7 @@ func (edit *EditWidget) onRandom() {
 	if err != nil || amount == 0 {
 		amount = 1000
 	}
-	size := data.Size{
-		MinAxisX: -3,
-		MaxAxisX: 3,
-		MinAxisY: -3,
-		MaxAxisY: 3,
-	}
+	size := edit.field.Size
 	*edit.field = *data.NewRandomField(amount, size)
 	edit.updateImage()
 }
@@ -129,23 +124,13 @@ func (edit *EditWidget) onLinear() {
 	if err != nil {
 		amount = 1000
 	}
-	size := data.Size{
-		MinAxisX: -3,
-		MaxAxisX: 3,
-		MinAxisY: -3,
-		MaxAxisY: 3,
-	}
+	size := edit.field.Size
 	*edit.field = *data.NewLinearField(amount, size)
 	edit.updateImage()
 }
 
 func (edit *EditWidget) onClear() {
-	size := data.Size{
-		MinAxisX: -3,
-		MaxAxisX: 3,
-		MinAxisY: -3,
-		MaxAxisY: 3,
-	}
+	size := edit.field.Size
 	*edit.field = *data.NewEmptyField(size)
 	edit.updateImage()
 }
