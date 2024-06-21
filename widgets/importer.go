@@ -17,39 +17,30 @@ import (
 
 type FileImporter struct {
 	widget.BaseWidget
-	step         float64
 	fields       []*data.VelocityField
 	parentWindow fyne.Window
 	app          fyne.App
 	progressBar  *widget.ProgressBar
 	button       *widget.Button
 	previewBtn   *widget.Button
+	onSuccess    func(fields []*data.VelocityField)
 }
 
-func NewFileImporter(app fyne.App, window fyne.Window, name string) *FileImporter {
+func NewFileImporter(app fyne.App, window fyne.Window, name string, onSuccess func(fields []*data.VelocityField)) *FileImporter {
 	fi := &FileImporter{
 		fields:       make([]*data.VelocityField, 0),
 		parentWindow: window,
 		app:          app,
+		onSuccess:    onSuccess,
 	}
 	fi.button = widget.NewButton(name, fi.onButton())
 	fi.previewBtn = widget.NewButton("Просмотр", fi.onPreview())
 	fi.progressBar = widget.NewProgressBar()
 	fi.progressBar.Hide()
-	fi.button.Disable()
 	fi.previewBtn.Disable()
 	fi.ExtendBaseWidget(fi)
 	return fi
 }
-
-func (fi *FileImporter) SetTimeStep(step float64) {
-	fi.step = step
-	if fi.button.Disabled() {
-		fi.button.Enable()
-	}
-}
-
-func (fi *FileImporter) GetFields() []*data.VelocityField { return fi.fields }
 
 func (fi *FileImporter) onButton() func() {
 	return func() {
@@ -65,7 +56,6 @@ func (fi *FileImporter) onButton() func() {
 			}
 			fi.progressBar.Show()
 			sort.Sort(utils.ByNumericalFilename(readers))
-			var currentTime float64 = 0
 			fi.fields = make([]*data.VelocityField, len(readers))
 			for i, uc := range readers {
 				fmt.Println(uc.Path(), "\n", uc.Query())
@@ -79,10 +69,10 @@ func (fi *FileImporter) onButton() func() {
 					fmt.Println(err)
 					continue
 				}
-				fi.fields[i] = data.NewVelocityField(d, currentTime)
-				currentTime += fi.step
+				fi.fields[i] = data.NewVelocityField(d)
 				fi.progressBar.SetValue(float64(i) / float64(len(readers)))
 			}
+			fi.onSuccess(fi.fields)
 			fi.progressBar.Hide()
 			fi.button.SetText(lUri.Name())
 		}, fi.parentWindow)
@@ -99,7 +89,7 @@ func (fi *FileImporter) onPreview() func() {
 
 func (fi *FileImporter) CreateRenderer() fyne.WidgetRenderer {
 	c := container.New(
-		layout.NewVBoxLayout(),
+		layout.NewGridLayoutWithRows(2),
 		container.New(layout.NewHBoxLayout(), fi.button, fi.previewBtn),
 		fi.progressBar,
 	)

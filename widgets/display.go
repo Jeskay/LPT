@@ -37,21 +37,22 @@ func NewDisplayMenuWidget(fieldManager *data.FieldManager, width, height float32
 	w := &DisplayMenuWidget{
 		pause:        true,
 		fieldManager: fieldManager,
-		maxT:         fieldManager.VelocityRecords,
 		pageLb:       binding.NewString(),
 	}
+	w.maxT = fieldManager.VelocityRecords
 	w.image = NewImageDisplay(fieldManager.GetImageById(0, 1080, 1080), 30, nil)
 	w.pageLb.Set(fmt.Sprintf("%d/%d", w.currentT+1, w.maxT))
 	w.prevPageBtn = widget.NewButtonWithIcon("", theme.MediaFastRewindIcon(), w.PreviousStep)
 	w.nextPageBtn = widget.NewButtonWithIcon("", theme.MediaFastForwardIcon(), w.NextStep)
 	w.playBtn = widget.NewButtonWithIcon("", theme.MediaPlayIcon(), w.PlayPause)
 	w.image.Resize(fyne.NewSize(width, height))
+
 	w.ExtendBaseWidget(w)
 	return w
 }
 
 func (display *DisplayMenuWidget) CreateRenderer() fyne.WidgetRenderer {
-	container := container.New(
+	c := container.New(
 		layout.NewVBoxLayout(),
 		container.NewStack(display.image),
 		container.NewCenter(
@@ -66,7 +67,7 @@ func (display *DisplayMenuWidget) CreateRenderer() fyne.WidgetRenderer {
 			),
 		),
 	)
-	return widget.NewSimpleRenderer(container)
+	return widget.NewSimpleRenderer(c)
 }
 
 func (w *DisplayMenuWidget) PlayPause() {

@@ -18,7 +18,6 @@ type Field struct {
 
 type VelocityField struct {
 	Data [][]float64
-	Time float64
 }
 
 type Size struct {
@@ -126,10 +125,9 @@ func (f *Field) SetColor(x, y float64, color color.RGBA, radius float64) {
 	}
 }
 
-func NewVelocityField(data [][]float64, time float64) *VelocityField {
+func NewVelocityField(data [][]float64) *VelocityField {
 	return &VelocityField{
 		Data: data,
-		Time: time,
 	}
 }
 

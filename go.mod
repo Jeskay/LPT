@@ -7,7 +7,7 @@ require (
 	github.com/pa-m/sklearn v0.0.0-20200711083454-beb861ee48b1
 )
 
-require github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
+require github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646
 
 require (
 	fyne.io/systray v1.10.1-0.20231115130155-104f5ef7839e // indirect

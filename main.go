@@ -2,54 +2,52 @@ package main
 
 import (
 	"LPT/data"
+	"LPT/resources"
 	"LPT/widgets"
+	"fmt"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/widget"
 )
 
 var mainApplication fyne.App = app.New()
 
 func main() {
 	mainWindow := mainApplication.NewWindow("LPT settings")
-	var displayWindow *widgets.DisplayWindow
-	onChanged := func(manager *data.FieldManager) {
-		if displayWindow != nil {
-			displayWindow.Hide()
-		}
-		displayWindow = widgets.NewDisplayWindow(mainApplication, "Particle Tracking", 1080, 720, manager)
-		displayWindow.Show()
+	onSettingsFail := func(input string, err error) {
+		fmt.Println(input, err)
 	}
-	settingsWindow := widgets.NewSettingsMenu(mainApplication, mainWindow, onChanged)
-	mainWindow.SetContent(settingsWindow.GetForm())
+
+	particlesPlaceholder := container.NewStack(
+		canvas.NewImageFromResource(resources.ResourceNoDataJpg),
+		widget.NewLabel("Необходимо указать параметры интерполяции и размер поля"),
+	)
+	displayPlaceholder := container.NewStack(
+		canvas.NewImageFromResource(resources.ResourceNoDataJpg),
+		widget.NewLabel("Необходимо указать параметры интерполяции и поле частиц"),
+	)
+	onSettingsParsed := func(params data.FieldParams, tracing bool, vField, hField []*data.VelocityField) {
+		fieldManager, err := data.NewFieldManager(params, tracing, data.NewEmptyField(params.Size), vField, hField)
+		if err != nil {
+			panic(err)
+		}
+		particlesPlaceholder.RemoveAll()
+		particlesPlaceholder.Add(widgets.NewEditWidget(mainWindow, fieldManager, 720, 720))
+		displayPlaceholder.RemoveAll()
+		displayPlaceholder.Add(widgets.NewDisplayMenuWidget(fieldManager, 720, 720))
+	}
+	settingsWindow := widgets.NewSettingsWidget(mainApplication, mainWindow, onSettingsFail, onSettingsParsed) //widgets.NewSettingsMenu(mainApplication, mainWindow, onChanged)
+
+	tabs := container.NewAppTabs(
+		container.NewTabItem("Модель", settingsWindow),
+		container.NewTabItem("Поле частиц", particlesPlaceholder),
+		container.NewTabItem("Результат", displayPlaceholder),
+	)
+	tabs.SetTabLocation(container.TabLocationLeading)
+	mainWindow.SetContent(tabs)
 	mainWindow.Show()
 	mainApplication.Run()
 }
-
-// func main() {
-// 	w := mainApplication.NewWindow("DEMO")
-// 	img := image.NewRGBA(image.Rectangle{image.Point{0, 0}, image.Point{500, 500}})
-// 	for i := 0; i < 500; i++ {
-// 		for j := 0; j < 500; j++ {
-// 			img.Set(i, j, color.RGBA{0, 100, 0, 0xff})
-// 		}
-// 	}
-// 	onDrag := func(imageDisplay *widgets.ImageDisplay, p fyne.Position) {
-// 		img.Set(int(p.X), int(p.Y), color.Black)
-// 		imageDisplay.SetImage(img)
-// 	}
-// 	w.SetContent(widgets.NewImageDisplay(img, onDrag))
-// 	w.ShowAndRun()
-// }
-
-// func main() {
-// 	step := 0.09
-// 	interSteps := 4
-// 	for i := 0; i < 50; i++ {
-// 		t := (float64(i*(interSteps+1)) + 1) * step
-// 		u, v := utils.GenerateVelocity(t, 3, -3)
-// 		utils.WriteDataToFile(u, "uVelocity"+strconv.Itoa(i+1)+".dat")
-// 		utils.WriteDataToFile(v, "wVelocity"+strconv.Itoa(i+1)+".dat")
-// 	}
-
-// }

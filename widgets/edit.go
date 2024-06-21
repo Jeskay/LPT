@@ -16,11 +16,6 @@ const (
 	Edit  = "Изменение"
 )
 
-type EditMenu struct {
-	window fyne.Window
-	edit   *EditWidget
-}
-
 type EditWidget struct {
 	widget.BaseWidget
 	painting       bool
@@ -31,33 +26,24 @@ type EditWidget struct {
 	imageWidth     float32
 	paintColor     color.RGBA
 	colorPicker    *ColorPickerWidget
-	field          *data.Field
+	manager        *data.FieldManager
 }
 
-func NewEditMenu(app fyne.App, title string, w, h float32, field *data.Field) *EditMenu {
-	menu := &EditMenu{
-		window: app.NewWindow(title),
-	}
-	menu.edit = NewEditWidget(menu.window, field, w, h)
-	menu.window.SetContent(menu.edit)
-	return menu
-}
-
-func NewEditWidget(window fyne.Window, field *data.Field, w, h float32) *EditWidget {
+func NewEditWidget(window fyne.Window, fieldManager *data.FieldManager, w, h float32) *EditWidget {
 	edit := &EditWidget{
 		painting:       false,
 		particleAmount: binding.NewInt(),
 		spawnRadius:    binding.NewInt(),
-		field:          field,
 		imageWidth:     w,
 		imageHeight:    h,
+		manager:        fieldManager,
 	}
-	img := field.Image(500, 500)
 	edit.particleAmount.Set(10)
 	edit.spawnRadius.Set(30)
 	edit.colorPicker = NewColorPickerWidget(window, func(color color.RGBA) {
 		edit.paintColor = color
 	})
+	img := fieldManager.Field.Image(500, 500)
 	edit.image = NewImageDisplay(resize.Resize(uint(w), uint(h), img, resize.Bilinear), 30, edit.onDrag)
 	edit.ExtendBaseWidget(edit)
 	return edit
@@ -69,7 +55,7 @@ func (edit *EditWidget) CreateRenderer() fyne.WidgetRenderer {
 	}
 	modeGroup := widget.NewRadioGroup([]string{Paint, Edit}, onModeChanged)
 	modeGroup.SetSelected(Paint)
-	c := container.NewHBox(
+	menu := container.NewHBox(
 		edit.image,
 		container.NewVBox(
 			modeGroup,
@@ -81,11 +67,11 @@ func (edit *EditWidget) CreateRenderer() fyne.WidgetRenderer {
 			container.NewVBox(widget.NewLabel("Радиус выделения"), NewIntSlider(edit.onRadiusParsed, 5, 500)),
 		),
 	)
-	return widget.NewSimpleRenderer(c)
+	return widget.NewSimpleRenderer(menu)
 }
 
 func (edit *EditWidget) onDrag(display *ImageDisplay, p fyne.Position) {
-	size := edit.field.Size
+	size := edit.manager.Field.Size
 	rad, err := edit.spawnRadius.Get()
 	if err != nil {
 		rad = 30
@@ -94,19 +80,19 @@ func (edit *EditWidget) onDrag(display *ImageDisplay, p fyne.Position) {
 	y := (float64(p.Y) * (size.MinAxisY - size.MaxAxisY) / float64(display.img.Image.Bounds().Dy())) - size.MinAxisY
 	radius := float64(rad) * (size.MaxAxisX - size.MinAxisX) / float64(display.img.Image.Bounds().Dx())
 	if edit.painting {
-		edit.field.SetColor(x, y, edit.paintColor, radius)
+		edit.manager.Field.SetColor(x, y, edit.paintColor, radius)
 	} else {
 		pCount, err := edit.particleAmount.Get()
 		if err != nil {
 			pCount = 10
 		}
-		edit.field.AddParticles(pCount, x, y, radius)
+		edit.manager.Field.AddParticles(pCount, x, y, radius)
 	}
 	edit.updateImage()
 }
 
 func (edit *EditWidget) updateImage() {
-	img := edit.field.Image(500, 500)
+	img := edit.manager.Field.Image(500, 500)
 	edit.image.SetImage(resize.Resize(uint(edit.imageWidth), uint(edit.imageHeight), img, resize.Bilinear))
 }
 
@@ -115,8 +101,8 @@ func (edit *EditWidget) onRandom() {
 	if err != nil || amount == 0 {
 		amount = 1000
 	}
-	size := edit.field.Size
-	*edit.field = *data.NewRandomField(amount, size)
+	size := edit.manager.Field.Size
+	*(edit.manager.Field) = *data.NewRandomField(amount, size)
 	edit.updateImage()
 }
 func (edit *EditWidget) onLinear() {
@@ -124,14 +110,14 @@ func (edit *EditWidget) onLinear() {
 	if err != nil {
 		amount = 1000
 	}
-	size := edit.field.Size
-	*edit.field = *data.NewLinearField(amount, size)
+	size := edit.manager.Field.Size
+	*edit.manager.Field = *data.NewLinearField(amount, size)
 	edit.updateImage()
 }
 
 func (edit *EditWidget) onClear() {
-	size := edit.field.Size
-	*edit.field = *data.NewEmptyField(size)
+	size := edit.manager.Field.Size
+	*edit.manager.Field = *data.NewEmptyField(size)
 	edit.updateImage()
 }
 
@@ -140,5 +126,7 @@ func (edit *EditWidget) onAmountParsed(value int) {
 }
 func (edit *EditWidget) onRadiusParsed(value int) {
 	edit.spawnRadius.Set(value)
-	edit.image.SetRadius(float32(value))
+	if edit.manager != nil {
+		edit.image.SetRadius(float32(value))
+	}
 }
