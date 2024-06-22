@@ -117,6 +117,7 @@ func NewIntSlider(onChange func(int), min int, max int) *IntSlider {
 		s.strValue.Set(strconv.Itoa(iv))
 		s.onChange(iv)
 	}))
+	s.value.Set(float64(min))
 	s.ExtendBaseWidget(s)
 	return s
 }

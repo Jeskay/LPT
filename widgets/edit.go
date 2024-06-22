@@ -56,16 +56,31 @@ func (edit *EditWidget) CreateRenderer() fyne.WidgetRenderer {
 	modeGroup := widget.NewRadioGroup([]string{Paint, Edit}, onModeChanged)
 	modeGroup.SetSelected(Paint)
 	menu := container.NewHBox(
-		edit.image,
-		container.NewVBox(
-			modeGroup,
-			widget.NewButton("Случайная генерация", edit.onRandom),
-			widget.NewButton("Генерация вдоль оси X", edit.onLinear),
-			widget.NewButton("Очистить", edit.onClear),
-			edit.colorPicker,
-			container.NewVBox(widget.NewLabel("Количество частиц"), NewIntSlider(edit.onAmountParsed, 1, 10000)),
-			container.NewVBox(widget.NewLabel("Радиус выделения"), NewIntSlider(edit.onRadiusParsed, 5, 500)),
+		container.NewGridWithRows(
+			3,
+			container.NewVBox(
+				widget.NewLabelWithStyle("Режим редактирования", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+				modeGroup,
+			),
+			container.NewVBox(
+				widget.NewLabelWithStyle("Частицы", fyne.TextAlignLeading, fyne.TextStyle{Bold: true}),
+				container.NewCenter(
+					container.NewVBox(
+						widget.NewLabel("Количество частиц"),
+						NewParsedIntEntry(edit.onAmountParsed, nil, 100),
+						widget.NewLabel("Радиус выделения"),
+						NewIntSlider(edit.onRadiusParsed, 5, 200),
+						container.NewPadded(edit.colorPicker),
+					),
+				),
+			),
+			container.NewVBox(
+				widget.NewButton("Случайная генерация", edit.onRandom),
+				widget.NewButton("Генерация вдоль оси X", edit.onLinear),
+				widget.NewButton("Очистить", edit.onClear),
+			),
 		),
+		edit.image,
 	)
 	return widget.NewSimpleRenderer(menu)
 }
