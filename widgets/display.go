@@ -25,7 +25,7 @@ type DisplayMenuWidget struct {
 	currentT     int
 	nextPageBtn  *widget.Button
 	prevPageBtn  *widget.Button
-	playBtn      *widget.Button
+	playBtn      *PauseWidget
 	pageLb       binding.String
 	maxT         int
 	pause        bool
@@ -44,8 +44,10 @@ func NewDisplayMenuWidget(fieldManager *data.FieldManager, width, height float32
 	w.pageLb.Set(fmt.Sprintf("%d/%d", w.currentT+1, w.maxT))
 	w.prevPageBtn = widget.NewButtonWithIcon("", theme.MediaFastRewindIcon(), w.PreviousStep)
 	w.nextPageBtn = widget.NewButtonWithIcon("", theme.MediaFastForwardIcon(), w.NextStep)
-	w.playBtn = widget.NewButtonWithIcon("", theme.MediaPlayIcon(), w.PlayPause)
+	w.playBtn = NewPauseWidget(w.PlayPause)
 	w.image.Resize(fyne.NewSize(width, height))
+	w.playBtn.Resize(fyne.NewSize(20, 20))
+	w.playBtn.Refresh()
 
 	w.ExtendBaseWidget(w)
 	return w
@@ -54,14 +56,13 @@ func NewDisplayMenuWidget(fieldManager *data.FieldManager, width, height float32
 func (display *DisplayMenuWidget) CreateRenderer() fyne.WidgetRenderer {
 	c := container.New(
 		layout.NewVBoxLayout(),
-		container.NewStack(display.image),
+		container.NewCenter(container.NewStack(display.image, display.playBtn)),
 		container.NewCenter(
 			container.New(
 				layout.NewHBoxLayout(),
 				display.prevPageBtn,
 				container.New(
 					layout.NewVBoxLayout(),
-					display.playBtn,
 					widget.NewLabelWithData(display.pageLb)),
 				display.nextPageBtn,
 			),

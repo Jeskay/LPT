@@ -86,8 +86,10 @@ func (imageDis *ImageDisplay) MouseIn(e *desktop.MouseEvent) {}
 func (imageDis *ImageDisplay) MouseOut() {}
 
 func (imageDis *ImageDisplay) MouseDown(e *desktop.MouseEvent) {
-	imageDis.isKeyDown = true
-	imageDis.onDrag(imageDis, e.Position)
+	if imageDis.onDrag != nil {
+		imageDis.isKeyDown = true
+		imageDis.onDrag(imageDis, e.Position)
+	}
 }
 
 func (imageDis *ImageDisplay) MouseUp(e *desktop.MouseEvent) {
