@@ -47,6 +47,11 @@ func NewFieldManager(params FieldParams, tracing bool, field *Field, uFields []*
 	return fManager, nil
 }
 
+func (fm *FieldManager) ClearHistory() {
+	fm.images = make([]image.Image, len(fm.VerticalFields)*fm.interStepCount)
+	fm.imageIndex = 0
+}
+
 func (fm *FieldManager) GetSize() *Size         { return &fm.Field.Size }
 func (fm *FieldManager) GetTimeStep() float64   { return fm.timeStep }
 func (fm *FieldManager) GetInterStepCount() int { return fm.interStepCount }

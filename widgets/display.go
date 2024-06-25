@@ -13,11 +13,6 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-type DisplayWindow struct {
-	fieldManager *data.FieldManager
-	window       fyne.Window
-}
-
 type DisplayMenuWidget struct {
 	widget.BaseWidget
 	fieldManager    *data.FieldManager
@@ -155,14 +150,12 @@ func (w *DisplayMenuWidget) NextStep() {
 	}
 }
 
-func NewDisplayWindow(app fyne.App, title string, w, h float32, fieldManager *data.FieldManager) *DisplayWindow {
-	display := &DisplayWindow{
-		window:       app.NewWindow(title),
-		fieldManager: fieldManager,
-	}
-	display.window.SetContent(NewDisplayMenuWidget(fieldManager, w, h))
-	return display
-}
+func (w *DisplayMenuWidget) Update() {
+	w.pause = true
+	w.currentT = 0
+	w.pageProgressBar.SetValue(0)
+	w.spdSlider.value.Set(1)
+	w.pageLb.Set(fmt.Sprintf("Кадр %d/%d", w.currentT+1, w.maxT))
 
-func (w *DisplayWindow) Show() { w.window.Show() }
-func (w *DisplayWindow) Hide() { w.window.Hide() }
+	w.image.SetImage(w.fieldManager.GetCurrentFieldImage(int(w.image.Size().Width), int(w.image.Size().Height)))
+}

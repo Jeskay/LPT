@@ -62,11 +62,19 @@ func NewSizeSettings(initialParams data.Size, onParsed func(data.Size)) *SizeSet
 func (size *SizeSettings) GetSize() data.Size { return size.size }
 
 func (size *SizeSettings) CreateRenderer() fyne.WidgetRenderer {
-	c := container.NewVBox(
-		container.NewHBox(widget.NewLabel("Мин. оси абсцисс"), size.minEntryX),
-		container.NewHBox(widget.NewLabel("Макс. оси абсцисс"), size.maxEntryX),
-		container.NewHBox(widget.NewLabel("Мин. оси ординат"), size.minEntryY),
-		container.NewHBox(widget.NewLabel("Макс. оси ординат"), size.maxEntryY),
+	c := container.NewGridWithColumns(2,
+		container.NewVBox(
+			widget.NewLabel("Мин. оси абсцисс"),
+			widget.NewLabel("Макс. оси абсцисс"),
+			widget.NewLabel("Мин. оси ординат"),
+			widget.NewLabel("Макс. оси ординат"),
+		),
+		container.NewVBox(
+			size.minEntryX,
+			size.maxEntryX,
+			size.minEntryY,
+			size.maxEntryY,
+		),
 	)
 	return widget.NewSimpleRenderer(c)
 }
