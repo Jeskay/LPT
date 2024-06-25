@@ -43,7 +43,6 @@ func NewFieldManager(params FieldParams, tracing bool, field *Field, uFields []*
 		images:           make([]image.Image, len(uFields)*params.InterStepCount),
 		Field:            field,
 	}
-	fManager.images[0] = resize.Resize(uint(1080), uint(1080), fManager.Field.Image(500, 500), resize.Bilinear)
 	fManager.imageIndex = 0
 	return fManager, nil
 }
@@ -54,6 +53,9 @@ func (fm *FieldManager) GetInterStepCount() int { return fm.interStepCount }
 func (fm *FieldManager) GetVelocityLen() int    { return fm.velocityLen }
 
 func (fm *FieldManager) GetImageById(index, w, h int) image.Image {
+	if index == 0 && fm.images[index] == nil {
+		fm.images[0] = resize.Resize(uint(w), uint(h), fm.Field.Image(500, 500), resize.Bilinear)
+	}
 	if index > fm.imageIndex {
 		for fm.imageIndex < index {
 			nTime := fm.timeStep * float64(fm.interStepCount) * float64(fm.imageIndex)
@@ -62,7 +64,7 @@ func (fm *FieldManager) GetImageById(index, w, h int) image.Image {
 			img := nxtField.Image(500, 500)
 			newImg := resize.Resize(uint(w), uint(h), img, resize.Bilinear)
 			if fm.ImageTracing {
-				fm.images[fm.imageIndex] = utils.CombineImages(fm.images[fm.imageIndex-1], newImg)
+				fm.images[fm.imageIndex] = utils.CombineImages(fm.GetImageById(fm.imageIndex-1, w, h), newImg)
 			} else {
 				fm.images[fm.imageIndex] = newImg
 			}
@@ -95,16 +97,5 @@ func (fm *FieldManager) GetVelocity(x, y, t float64) (float64, float64) {
 	cX, cY := math.Ceil(ratioX*(x-fm.GetSize().MinAxisX)), math.Ceil(ratioY*(y+fm.GetSize().MinAxisY))
 	u := InterpolateByT(fm.VerticalFields, fm.interStepCount, fm.timeStep, t, cX, cY)
 	w := InterpolateByT(fm.HorizontalFields, fm.interStepCount, fm.timeStep, t, cX, cY)
-	// uft, wft := utils.VelocityPointByFraction(t, cX, cY)
-	// ut, wt := utils.VelocityPoint(t, x, y)
-	// umiss, wmiss := (ut-u)/ut, (wt-w)/w
-	// if math.Abs(umiss) > 0.05 {
-	// 	fmt.Println("ALERT U MISS ", umiss, " ", uft)
-	// }
-	// if math.Abs(wmiss) > 0.05 {
-	// 	fmt.Println("ALERT W MISS ", wmiss, " ", wft)
-	// }
-	// //fmt.Println("ConvertMiss U ", (uft-ut)/ut, " W ", (wft-wt)/wt)
-	// fmt.Println("Umiss ", (ut-u)/ut, " Wmiss ", (wt-w)/wt)
 	return u, w
 }

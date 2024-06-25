@@ -47,10 +47,10 @@ func NewDisplayMenuWidget(fieldManager *data.FieldManager, width, height float32
 	}
 	w.fpsStr.Set(strconv.Itoa(w.fps) + "x")
 	w.maxT = fieldManager.VelocityRecords
-	w.image = NewImageDisplay(fieldManager.GetImageById(0, 1080, 1080), 30, nil)
+	w.image = NewImageDisplay(fieldManager.GetCurrentFieldImage(int(width), int(height)), 30, nil)
 	w.pageLb.Set(fmt.Sprintf("Кадр %d/%d", w.currentT+1, w.maxT))
-	w.prevPageBtn = widget.NewButton("<<Предыдущий", w.PreviousStep)
-	w.nextPageBtn = widget.NewButton("Следующий>>", w.NextStep)
+	w.prevPageBtn = widget.NewButton("<< Предыдущий", w.PreviousStep)
+	w.nextPageBtn = widget.NewButton("Следующий >>", w.NextStep)
 	w.pageProgressBar = widget.NewProgressBar()
 	w.pageProgressBar.Min = 0
 	w.pageProgressBar.Max = float64(w.maxT - 1)
@@ -68,12 +68,15 @@ func NewDisplayMenuWidget(fieldManager *data.FieldManager, width, height float32
 func (display *DisplayMenuWidget) CreateRenderer() fyne.WidgetRenderer {
 	c := container.New(
 		layout.NewVBoxLayout(),
-		container.NewCenter(container.NewStack(display.image, display.playBtn)),
-		container.NewBorder(nil, nil,
-			widget.NewLabel("Кадров в секунду"),
-			widget.NewLabelWithData(display.fpsStr),
-			display.spdSlider,
+		container.NewPadded(
+			container.NewCenter(container.NewStack(display.image, display.playBtn)),
 		),
+		container.NewPadded(
+			container.NewBorder(nil, nil,
+				widget.NewLabel("Кадров в секунду"),
+				widget.NewLabelWithData(display.fpsStr),
+				display.spdSlider,
+			)),
 		container.NewPadded(
 			container.NewVBox(
 				widget.NewLabelWithData(display.pageLb),
@@ -131,7 +134,7 @@ func (w *DisplayMenuWidget) PreviousStep() {
 	}
 	w.currentT--
 	w.pageProgressBar.SetValue(float64(w.currentT))
-	img := w.fieldManager.GetImageById(w.currentT, 1080, 1080)
+	img := w.fieldManager.GetImageById(w.currentT, int(w.image.Size().Width), int(w.image.Size().Height))
 	w.image.SetImage(img)
 	w.pageLb.Set(fmt.Sprintf("Кадр %d/%d", w.currentT+1, w.maxT))
 	if w.currentT == 0 {
@@ -144,7 +147,7 @@ func (w *DisplayMenuWidget) NextStep() {
 	}
 	w.currentT++
 	w.pageProgressBar.SetValue(float64(w.currentT))
-	img := w.fieldManager.GetImageById(w.currentT, 1080, 1080)
+	img := w.fieldManager.GetImageById(w.currentT, int(w.image.Size().Width), int(w.image.Size().Height))
 	w.image.SetImage(img)
 	w.pageLb.Set(fmt.Sprintf("Кадр %d/%d", w.currentT+1, w.maxT))
 	if w.currentT == w.maxT-1 {
