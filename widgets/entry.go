@@ -55,7 +55,12 @@ func (pe *ParsedFloatEntry) CreateRenderer() fyne.WidgetRenderer {
 
 func (s *IntSlider) CreateRenderer() fyne.WidgetRenderer {
 	slider := widget.NewSliderWithData(float64(s.min), float64(s.max), s.value)
-	c := container.NewVBox(slider, container.NewCenter(widget.NewLabelWithData(s.strValue)))
+	var c *fyne.Container
+	if s.strValue != nil {
+		c = container.NewVBox(slider, container.NewCenter(widget.NewLabelWithData(s.strValue)))
+	} else {
+		c = container.NewPadded(slider)
+	}
 	return widget.NewSimpleRenderer(c)
 }
 
@@ -100,7 +105,7 @@ func NewParsedFloatEntry(onParsed func(value float64), onFailed func(input strin
 	return pe
 }
 
-func NewIntSlider(onChange func(int), min int, max int) *IntSlider {
+func NewIntSliderWithIndicator(onChange func(int), min int, max int) *IntSlider {
 	s := &IntSlider{
 		onChange: onChange,
 		min:      min,
@@ -115,6 +120,26 @@ func NewIntSlider(onChange func(int), min int, max int) *IntSlider {
 		}
 		iv := int(math.Round(v))
 		s.strValue.Set(strconv.Itoa(iv))
+		s.onChange(iv)
+	}))
+	s.value.Set(float64(min))
+	s.ExtendBaseWidget(s)
+	return s
+}
+
+func NewIntSlider(onChange func(int), min int, max int) *IntSlider {
+	s := &IntSlider{
+		onChange: onChange,
+		min:      min,
+		max:      max,
+		value:    binding.NewFloat(),
+	}
+	s.value.AddListener(binding.NewDataListener(func() {
+		v, err := s.value.Get()
+		if err != nil {
+			return
+		}
+		iv := int(math.Round(v))
 		s.onChange(iv)
 	}))
 	s.value.Set(float64(min))

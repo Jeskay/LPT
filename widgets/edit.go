@@ -69,7 +69,7 @@ func (edit *EditWidget) CreateRenderer() fyne.WidgetRenderer {
 						widget.NewLabel("Количество частиц"),
 						NewParsedIntEntry(edit.onAmountParsed, nil, 100),
 						widget.NewLabel("Радиус выделения"),
-						NewIntSlider(edit.onRadiusParsed, 5, 200),
+						NewIntSliderWithIndicator(edit.onRadiusParsed, 5, 200),
 						container.NewPadded(edit.colorPicker),
 					),
 				),

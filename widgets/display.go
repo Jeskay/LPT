@@ -3,13 +3,13 @@ package widgets
 import (
 	"LPT/data"
 	"fmt"
+	"strconv"
 	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/layout"
-	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -20,15 +20,19 @@ type DisplayWindow struct {
 
 type DisplayMenuWidget struct {
 	widget.BaseWidget
-	fieldManager *data.FieldManager
-	image        *ImageDisplay
-	currentT     int
-	nextPageBtn  *widget.Button
-	prevPageBtn  *widget.Button
-	playBtn      *PauseWidget
-	pageLb       binding.String
-	maxT         int
-	pause        bool
+	fieldManager    *data.FieldManager
+	image           *ImageDisplay
+	spdSlider       *IntSlider
+	pageProgressBar *widget.ProgressBar
+	currentT        int
+	nextPageBtn     *widget.Button
+	prevPageBtn     *widget.Button
+	playBtn         *PauseWidget
+	pageLb          binding.String
+	fps             int
+	fpsStr          binding.String
+	maxT            int
+	pause           bool
 
 	timerQ chan struct{}
 }
@@ -38,12 +42,20 @@ func NewDisplayMenuWidget(fieldManager *data.FieldManager, width, height float32
 		pause:        true,
 		fieldManager: fieldManager,
 		pageLb:       binding.NewString(),
+		fpsStr:       binding.NewString(),
+		fps:          1,
 	}
+	w.fpsStr.Set(strconv.Itoa(w.fps) + "x")
 	w.maxT = fieldManager.VelocityRecords
 	w.image = NewImageDisplay(fieldManager.GetImageById(0, 1080, 1080), 30, nil)
-	w.pageLb.Set(fmt.Sprintf("%d/%d", w.currentT+1, w.maxT))
-	w.prevPageBtn = widget.NewButtonWithIcon("", theme.MediaFastRewindIcon(), w.PreviousStep)
-	w.nextPageBtn = widget.NewButtonWithIcon("", theme.MediaFastForwardIcon(), w.NextStep)
+	w.pageLb.Set(fmt.Sprintf("Кадр %d/%d", w.currentT+1, w.maxT))
+	w.prevPageBtn = widget.NewButton("<<Предыдущий", w.PreviousStep)
+	w.nextPageBtn = widget.NewButton("Следующий>>", w.NextStep)
+	w.pageProgressBar = widget.NewProgressBar()
+	w.pageProgressBar.Min = 0
+	w.pageProgressBar.Max = float64(w.maxT - 1)
+	w.pageProgressBar.TextFormatter = func() string { return "" }
+	w.spdSlider = NewIntSlider(w.onSpdChange, w.fps, 120)
 	w.playBtn = NewPauseWidget(w.PlayPause)
 	w.image.Resize(fyne.NewSize(width, height))
 	w.playBtn.Resize(fyne.NewSize(20, 20))
@@ -57,13 +69,21 @@ func (display *DisplayMenuWidget) CreateRenderer() fyne.WidgetRenderer {
 	c := container.New(
 		layout.NewVBoxLayout(),
 		container.NewCenter(container.NewStack(display.image, display.playBtn)),
+		container.NewBorder(nil, nil,
+			widget.NewLabel("Кадров в секунду"),
+			widget.NewLabelWithData(display.fpsStr),
+			display.spdSlider,
+		),
+		container.NewPadded(
+			container.NewVBox(
+				widget.NewLabelWithData(display.pageLb),
+				display.pageProgressBar,
+			),
+		),
 		container.NewCenter(
 			container.New(
 				layout.NewHBoxLayout(),
 				display.prevPageBtn,
-				container.New(
-					layout.NewVBoxLayout(),
-					widget.NewLabelWithData(display.pageLb)),
 				display.nextPageBtn,
 			),
 		),
@@ -75,7 +95,7 @@ func (w *DisplayMenuWidget) PlayPause() {
 	if w.pause {
 		w.nextPageBtn.Disable()
 		w.prevPageBtn.Disable()
-		ticker := time.NewTicker(10 * time.Millisecond)
+		ticker := time.NewTicker(time.Duration(1000/w.fps) * time.Millisecond)
 		w.timerQ = make(chan struct{})
 		go func() {
 			for {
@@ -99,14 +119,21 @@ func (w *DisplayMenuWidget) PlayPause() {
 		w.pause = true
 	}
 }
+
+func (w *DisplayMenuWidget) onSpdChange(value int) {
+	w.fps = value
+	w.fpsStr.Set(strconv.Itoa(w.fps) + "x")
+}
+
 func (w *DisplayMenuWidget) PreviousStep() {
 	if w.pause && w.currentT < w.maxT-1 {
 		w.nextPageBtn.Enable()
 	}
 	w.currentT--
+	w.pageProgressBar.SetValue(float64(w.currentT))
 	img := w.fieldManager.GetImageById(w.currentT, 1080, 1080)
 	w.image.SetImage(img)
-	w.pageLb.Set(fmt.Sprintf("%d/%d", w.currentT+1, w.maxT))
+	w.pageLb.Set(fmt.Sprintf("Кадр %d/%d", w.currentT+1, w.maxT))
 	if w.currentT == 0 {
 		w.prevPageBtn.Disable()
 	}
@@ -116,9 +143,10 @@ func (w *DisplayMenuWidget) NextStep() {
 		w.prevPageBtn.Enable()
 	}
 	w.currentT++
+	w.pageProgressBar.SetValue(float64(w.currentT))
 	img := w.fieldManager.GetImageById(w.currentT, 1080, 1080)
 	w.image.SetImage(img)
-	w.pageLb.Set(fmt.Sprintf("%d/%d", w.currentT+1, w.maxT))
+	w.pageLb.Set(fmt.Sprintf("Кадр %d/%d", w.currentT+1, w.maxT))
 	if w.currentT == w.maxT-1 {
 		w.nextPageBtn.Disable()
 	}
