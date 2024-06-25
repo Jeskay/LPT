@@ -28,6 +28,12 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		if editTab != nil {
+			tabs.Remove(editTab)
+		}
+		if displayTab != nil {
+			tabs.Remove(displayTab)
+		}
 		edit = widgets.NewEditWidget(mainWindow, fieldManager, 720, 720)
 		editTab = container.NewTabItem("Поле частиц", edit)
 		display = widgets.NewDisplayMenuWidget(fieldManager, 720, 720)
@@ -46,7 +52,7 @@ func main() {
 
 	tabs.Append(container.NewTabItem("Модель", settingsWindow))
 	tabs.SetTabLocation(container.TabLocationLeading)
-
+	mainWindow.Resize(fyne.NewSize(1280, 720))
 	mainWindow.SetContent(tabs)
 	mainWindow.Show()
 	mainApplication.Run()
