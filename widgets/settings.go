@@ -12,7 +12,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-type SettingsWidget struct {
+type SettingsMenu struct {
 	widget.BaseWidget
 	vVelocityImporter *FileImporter
 	hVelocityImporter *FileImporter
@@ -26,8 +26,8 @@ type SettingsWidget struct {
 	onFailed          func(input string, err error)
 }
 
-func NewSettingsWidget(app fyne.App, window fyne.Window, onFailInput func(input string, err error), onParsed func(params data.FieldParams, tracing bool, vField, hField []*data.VelocityField)) *SettingsWidget {
-	settings := &SettingsWidget{
+func NewSettingsWidget(app fyne.App, window fyne.Window, onFailInput func(input string, err error), onParsed func(params data.FieldParams, tracing bool, vField, hField []*data.VelocityField)) *SettingsMenu {
+	settings := &SettingsMenu{
 		onParsed: onParsed,
 		onFailed: onFailInput,
 	}
@@ -60,7 +60,7 @@ func NewSettingsWidget(app fyne.App, window fyne.Window, onFailInput func(input 
 	return settings
 }
 
-func (s *SettingsWidget) CreateRenderer() fyne.WidgetRenderer {
+func (s *SettingsMenu) CreateRenderer() fyne.WidgetRenderer {
 	gridVertical := layout.NewGridLayoutWithRows(2)
 	title := canvas.NewText("Параметры", color.Black)
 	title.TextSize = 30
@@ -90,7 +90,7 @@ func (s *SettingsWidget) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(c)
 }
 
-func (s *SettingsWidget) tryParse() {
+func (s *SettingsMenu) tryParse() {
 	if s.hVelocityImporter == nil || s.vVelocityImporter == nil {
 		return
 	}

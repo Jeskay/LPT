@@ -10,7 +10,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-type ColorPickerWidget struct {
+type ColorPicker struct {
 	widget.BaseWidget
 	colorDis *canvas.Rectangle
 	onPick   func(color.RGBA)
@@ -18,8 +18,8 @@ type ColorPickerWidget struct {
 	picker   *dialog.ColorPickerDialog
 }
 
-func NewColorPickerWidget(window fyne.Window, onPick func(color.RGBA)) *ColorPickerWidget {
-	cPicker := &ColorPickerWidget{
+func NewColorPickerWidget(window fyne.Window, onPick func(color.RGBA)) *ColorPicker {
+	cPicker := &ColorPicker{
 		window:   window,
 		onPick:   onPick,
 		colorDis: canvas.NewRectangle(color.Black),
@@ -37,7 +37,7 @@ func NewColorPickerWidget(window fyne.Window, onPick func(color.RGBA)) *ColorPic
 	return cPicker
 }
 
-func (cPicker *ColorPickerWidget) CreateRenderer() fyne.WidgetRenderer {
+func (cPicker *ColorPicker) CreateRenderer() fyne.WidgetRenderer {
 	c := container.NewGridWithColumns(2,
 		container.NewHBox(
 			widget.NewLabel("Текущий цвет"),
@@ -48,6 +48,6 @@ func (cPicker *ColorPickerWidget) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(c)
 }
 
-func (cPicker *ColorPickerWidget) onChange() {
+func (cPicker *ColorPicker) onChange() {
 	cPicker.picker.Show()
 }

@@ -16,7 +16,7 @@ const (
 	Edit  = "Изменение"
 )
 
-type EditWidget struct {
+type EditMenu struct {
 	widget.BaseWidget
 	painting       bool
 	particleAmount binding.Int
@@ -25,12 +25,12 @@ type EditWidget struct {
 	imageHeight    float32
 	imageWidth     float32
 	paintColor     color.RGBA
-	colorPicker    *ColorPickerWidget
+	colorPicker    *ColorPicker
 	manager        *data.FieldManager
 }
 
-func NewEditWidget(window fyne.Window, fieldManager *data.FieldManager, w, h float32) *EditWidget {
-	edit := &EditWidget{
+func NewEditWidget(window fyne.Window, fieldManager *data.FieldManager, w, h float32) *EditMenu {
+	edit := &EditMenu{
 		painting:       false,
 		particleAmount: binding.NewInt(),
 		spawnRadius:    binding.NewInt(),
@@ -49,7 +49,7 @@ func NewEditWidget(window fyne.Window, fieldManager *data.FieldManager, w, h flo
 	return edit
 }
 
-func (edit *EditWidget) CreateRenderer() fyne.WidgetRenderer {
+func (edit *EditMenu) CreateRenderer() fyne.WidgetRenderer {
 	onModeChanged := func(mode string) {
 		edit.painting = mode == Paint
 	}
@@ -85,7 +85,7 @@ func (edit *EditWidget) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(menu)
 }
 
-func (edit *EditWidget) onDrag(display *ImageDisplay, p fyne.Position) {
+func (edit *EditMenu) onDrag(display *ImageDisplay, p fyne.Position) {
 	size := edit.manager.Field.Size
 	rad, err := edit.spawnRadius.Get()
 	if err != nil {
@@ -106,12 +106,12 @@ func (edit *EditWidget) onDrag(display *ImageDisplay, p fyne.Position) {
 	edit.updateImage()
 }
 
-func (edit *EditWidget) updateImage() {
+func (edit *EditMenu) updateImage() {
 	img := edit.manager.Field.Image(500, 500)
 	edit.image.SetImage(resize.Resize(uint(edit.imageWidth), uint(edit.imageHeight), img, resize.Bilinear))
 }
 
-func (edit *EditWidget) onRandom() {
+func (edit *EditMenu) onRandom() {
 	amount, err := edit.particleAmount.Get()
 	if err != nil || amount == 0 {
 		amount = 1000
@@ -120,7 +120,7 @@ func (edit *EditWidget) onRandom() {
 	*(edit.manager.Field) = *data.NewRandomField(amount, size)
 	edit.updateImage()
 }
-func (edit *EditWidget) onLinear() {
+func (edit *EditMenu) onLinear() {
 	amount, err := edit.particleAmount.Get()
 	if err != nil {
 		amount = 1000
@@ -130,16 +130,16 @@ func (edit *EditWidget) onLinear() {
 	edit.updateImage()
 }
 
-func (edit *EditWidget) onClear() {
+func (edit *EditMenu) onClear() {
 	size := edit.manager.Field.Size
 	*edit.manager.Field = *data.NewEmptyField(size)
 	edit.updateImage()
 }
 
-func (edit *EditWidget) onAmountParsed(value int) {
+func (edit *EditMenu) onAmountParsed(value int) {
 	edit.particleAmount.Set(value)
 }
-func (edit *EditWidget) onRadiusParsed(value int) {
+func (edit *EditMenu) onRadiusParsed(value int) {
 	edit.spawnRadius.Set(value)
 	if edit.manager != nil {
 		edit.image.SetRadius(float32(value))

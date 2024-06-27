@@ -17,8 +17,8 @@ func main() {
 	onSettingsFail := func(input string, err error) {
 		fmt.Println(input, err)
 	}
-	var edit *widgets.EditWidget
-	var display *widgets.DisplayMenuWidget
+	var edit *widgets.EditMenu
+	var display *widgets.DisplayMenu
 	var editTab *container.TabItem
 	var displayTab *container.TabItem
 	tabs := container.NewAppTabs()

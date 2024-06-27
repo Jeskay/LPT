@@ -13,7 +13,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-type DisplayMenuWidget struct {
+type DisplayMenu struct {
 	widget.BaseWidget
 	fieldManager    *data.FieldManager
 	image           *ImageDisplay
@@ -22,7 +22,7 @@ type DisplayMenuWidget struct {
 	currentT        int
 	nextPageBtn     *widget.Button
 	prevPageBtn     *widget.Button
-	playBtn         *PauseWidget
+	playBtn         *Pause
 	pageLb          binding.String
 	fps             int
 	fpsStr          binding.String
@@ -32,8 +32,8 @@ type DisplayMenuWidget struct {
 	timerQ chan struct{}
 }
 
-func NewDisplayMenuWidget(fieldManager *data.FieldManager, width, height float32) *DisplayMenuWidget {
-	w := &DisplayMenuWidget{
+func NewDisplayMenuWidget(fieldManager *data.FieldManager, width, height float32) *DisplayMenu {
+	w := &DisplayMenu{
 		pause:        true,
 		fieldManager: fieldManager,
 		pageLb:       binding.NewString(),
@@ -60,7 +60,7 @@ func NewDisplayMenuWidget(fieldManager *data.FieldManager, width, height float32
 	return w
 }
 
-func (display *DisplayMenuWidget) CreateRenderer() fyne.WidgetRenderer {
+func (display *DisplayMenu) CreateRenderer() fyne.WidgetRenderer {
 	c := container.New(
 		layout.NewVBoxLayout(),
 		container.NewPadded(
@@ -89,7 +89,7 @@ func (display *DisplayMenuWidget) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(c)
 }
 
-func (w *DisplayMenuWidget) PlayPause() {
+func (w *DisplayMenu) PlayPause() {
 	if w.pause {
 		w.nextPageBtn.Disable()
 		w.prevPageBtn.Disable()
@@ -118,12 +118,12 @@ func (w *DisplayMenuWidget) PlayPause() {
 	}
 }
 
-func (w *DisplayMenuWidget) onSpdChange(value int) {
+func (w *DisplayMenu) onSpdChange(value int) {
 	w.fps = value
 	w.fpsStr.Set(strconv.Itoa(w.fps) + "x")
 }
 
-func (w *DisplayMenuWidget) PreviousStep() {
+func (w *DisplayMenu) PreviousStep() {
 	if w.pause && w.currentT < w.maxT-1 {
 		w.nextPageBtn.Enable()
 	}
@@ -136,7 +136,7 @@ func (w *DisplayMenuWidget) PreviousStep() {
 		w.prevPageBtn.Disable()
 	}
 }
-func (w *DisplayMenuWidget) NextStep() {
+func (w *DisplayMenu) NextStep() {
 	if w.pause && w.currentT == 0 {
 		w.prevPageBtn.Enable()
 	}
@@ -150,7 +150,7 @@ func (w *DisplayMenuWidget) NextStep() {
 	}
 }
 
-func (w *DisplayMenuWidget) Update() {
+func (w *DisplayMenu) Update() {
 	w.pause = true
 	w.currentT = 0
 	w.pageProgressBar.SetValue(0)

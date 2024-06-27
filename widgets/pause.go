@@ -12,7 +12,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-type PauseWidget struct {
+type Pause struct {
 	widget.BaseWidget
 	icon      *widget.Icon
 	circle    *canvas.Circle
@@ -23,8 +23,8 @@ type PauseWidget struct {
 	fadeTimer *time.Timer
 }
 
-func NewPauseWidget(onClick func()) *PauseWidget {
-	w := &PauseWidget{
+func NewPauseWidget(onClick func()) *Pause {
+	w := &Pause{
 		onClick: onClick,
 		paused:  true,
 		circle:  canvas.NewCircle(color.RGBA{0, 0, 0, 150}),
@@ -47,11 +47,11 @@ func NewPauseWidget(onClick func()) *PauseWidget {
 	return w
 }
 
-func (p *PauseWidget) CreateRenderer() fyne.WidgetRenderer {
+func (p *Pause) CreateRenderer() fyne.WidgetRenderer {
 	return widget.NewSimpleRenderer(p.container)
 }
 
-func (p *PauseWidget) Tapped(e *fyne.PointEvent) {
+func (p *Pause) Tapped(e *fyne.PointEvent) {
 	if p.paused {
 		p.icon.SetResource(theme.MediaPauseIcon())
 	} else {
@@ -60,10 +60,10 @@ func (p *PauseWidget) Tapped(e *fyne.PointEvent) {
 	p.paused = !p.paused
 	p.onClick()
 }
-func (p *PauseWidget) MouseIn(e *desktop.MouseEvent) {
+func (p *Pause) MouseIn(e *desktop.MouseEvent) {
 
 }
-func (p *PauseWidget) MouseMoved(e *desktop.MouseEvent) {
+func (p *Pause) MouseMoved(e *desktop.MouseEvent) {
 	if p.fadeTimer != nil {
 		p.circle.Show()
 		p.icon.Show()
@@ -71,6 +71,6 @@ func (p *PauseWidget) MouseMoved(e *desktop.MouseEvent) {
 	}
 }
 
-func (p *PauseWidget) MouseOut() {
+func (p *Pause) MouseOut() {
 
 }
