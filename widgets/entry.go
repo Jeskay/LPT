@@ -3,10 +3,12 @@ package widgets
 import (
 	"math"
 	"strconv"
+	"time"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -16,6 +18,8 @@ type ParsedIntEntry struct {
 	entry    *widget.Entry
 	onFailed func(input string, err error)
 	onParsed func(value int)
+
+	delayTimer *time.Timer
 }
 
 type ParsedFloatEntry struct {
@@ -24,6 +28,8 @@ type ParsedFloatEntry struct {
 	entry    *widget.Entry
 	onFailed func(input string, err error)
 	onParsed func(value float64)
+
+	delayTimer *time.Timer
 }
 
 type IntSlider struct {
@@ -42,7 +48,51 @@ func (pe *ParsedIntEntry) parse(input string) {
 		return
 	}
 	pe.value = v
-	pe.onParsed(v)
+	pe.resetDelay()
+}
+
+func (pe *ParsedFloatEntry) resetDelay() {
+	if pe.delayTimer != nil {
+		pe.delayTimer.Reset(1 * time.Second)
+	} else {
+		pe.delayTimer = time.AfterFunc(1*time.Second, func() {
+			pe.onParsed(pe.value)
+		})
+	}
+}
+
+func (pe *ParsedIntEntry) resetDelay() {
+	if pe.delayTimer != nil {
+		pe.delayTimer.Reset(1 * time.Second)
+	} else {
+		pe.delayTimer = time.AfterFunc(1*time.Second, func() {
+			pe.onParsed(pe.value)
+		})
+	}
+}
+
+func (pe *ParsedIntEntry) MouseIn(e *desktop.MouseEvent) {
+	pe.resetDelay()
+}
+
+func (pe *ParsedIntEntry) MouseOut(e *desktop.MouseEvent) {
+	pe.onParsed(pe.value)
+}
+
+func (pe *ParsedIntEntry) MouseMoved(e *desktop.MouseEvent) {
+
+}
+
+func (pe *ParsedFloatEntry) MouseIn(e *desktop.MouseEvent) {
+	pe.resetDelay()
+}
+
+func (pe *ParsedFloatEntry) MouseOut(e *desktop.MouseEvent) {
+	pe.onParsed(pe.value)
+}
+
+func (pe *ParsedFloatEntry) MouseMoved(e *desktop.MouseEvent) {
+
 }
 
 func (pe *ParsedIntEntry) CreateRenderer() fyne.WidgetRenderer {
