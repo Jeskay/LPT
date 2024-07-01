@@ -4,6 +4,7 @@ import (
 	"LPT/data"
 	"LPT/widgets"
 	"fmt"
+	"image"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
@@ -36,7 +37,9 @@ func main() {
 		}
 		edit = widgets.NewEditWidget(mainWindow, fieldManager, 720, 720)
 		editTab = container.NewTabItem("Поле частиц", edit)
-		display = widgets.NewDisplayMenuWidget(fieldManager, 720, 720)
+		display = widgets.NewDisplayMenuWidget(func(index int) image.Image {
+			return fieldManager.GetImageById(index, 720, 720)
+		}, fieldManager.VelocityRecords)
 		displayTab = container.NewTabItem("Результат", display)
 		tabs.Append(editTab)
 		tabs.Append(displayTab)

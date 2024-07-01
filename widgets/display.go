@@ -1,8 +1,8 @@
 package widgets
 
 import (
-	"LPT/data"
 	"fmt"
+	"image"
 	"strconv"
 	"time"
 
@@ -15,7 +15,6 @@ import (
 
 type DisplayMenu struct {
 	widget.BaseWidget
-	fieldManager    *data.FieldManager
 	image           *ImageDisplay
 	spdSlider       *IntSlider
 	pageProgressBar *widget.ProgressBar
@@ -30,19 +29,21 @@ type DisplayMenu struct {
 	pause           bool
 
 	timerQ chan struct{}
+
+	imgByIndex func(index int) image.Image
 }
 
-func NewDisplayMenuWidget(fieldManager *data.FieldManager, width, height float32) *DisplayMenu {
+func NewDisplayMenuWidget(imgByIndex func(int) image.Image, maxIndex int) *DisplayMenu {
 	w := &DisplayMenu{
-		pause:        true,
-		fieldManager: fieldManager,
-		pageLb:       binding.NewString(),
-		fpsStr:       binding.NewString(),
-		fps:          1,
+		pause:      true,
+		pageLb:     binding.NewString(),
+		fpsStr:     binding.NewString(),
+		fps:        1,
+		maxT:       maxIndex,
+		imgByIndex: imgByIndex,
 	}
 	w.fpsStr.Set(strconv.Itoa(w.fps) + "x")
-	w.maxT = fieldManager.VelocityRecords
-	w.image = NewImageDisplay(fieldManager.GetCurrentFieldImage(int(width), int(height)), 30, nil)
+	w.image = NewImageDisplay(w.imgByIndex(w.currentT), 30, nil)
 	w.pageLb.Set(fmt.Sprintf("Кадр %d/%d", w.currentT+1, w.maxT))
 	w.prevPageBtn = widget.NewButton("<< Предыдущий", w.PreviousStep)
 	w.nextPageBtn = widget.NewButton("Следующий >>", w.NextStep)
@@ -52,7 +53,6 @@ func NewDisplayMenuWidget(fieldManager *data.FieldManager, width, height float32
 	w.pageProgressBar.TextFormatter = func() string { return "" }
 	w.spdSlider = NewIntSlider(w.onSpdChange, w.fps, 120)
 	w.playBtn = NewPauseWidget(w.PlayPause)
-	w.image.Resize(fyne.NewSize(width, height))
 	w.playBtn.Resize(fyne.NewSize(20, 20))
 	w.playBtn.Refresh()
 
@@ -129,7 +129,7 @@ func (w *DisplayMenu) PreviousStep() {
 	}
 	w.currentT--
 	w.pageProgressBar.SetValue(float64(w.currentT))
-	img := w.fieldManager.GetImageById(w.currentT, int(w.image.Size().Width), int(w.image.Size().Height))
+	img := w.imgByIndex(w.currentT)
 	w.image.SetImage(img)
 	w.pageLb.Set(fmt.Sprintf("Кадр %d/%d", w.currentT+1, w.maxT))
 	if w.currentT == 0 {
@@ -142,7 +142,7 @@ func (w *DisplayMenu) NextStep() {
 	}
 	w.currentT++
 	w.pageProgressBar.SetValue(float64(w.currentT))
-	img := w.fieldManager.GetImageById(w.currentT, int(w.image.Size().Width), int(w.image.Size().Height))
+	img := w.imgByIndex(w.currentT)
 	w.image.SetImage(img)
 	w.pageLb.Set(fmt.Sprintf("Кадр %d/%d", w.currentT+1, w.maxT))
 	if w.currentT == w.maxT-1 {
@@ -157,5 +157,5 @@ func (w *DisplayMenu) Update() {
 	w.spdSlider.value.Set(1)
 	w.pageLb.Set(fmt.Sprintf("Кадр %d/%d", w.currentT+1, w.maxT))
 
-	w.image.SetImage(w.fieldManager.GetCurrentFieldImage(int(w.image.Size().Width), int(w.image.Size().Height)))
+	w.image.SetImage(w.imgByIndex(w.currentT))
 }
