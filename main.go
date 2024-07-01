@@ -2,6 +2,7 @@ package main
 
 import (
 	"LPT/data"
+	"LPT/resources"
 	"LPT/widgets"
 	"fmt"
 	"image"
@@ -14,7 +15,8 @@ import (
 var mainApplication fyne.App = app.New()
 
 func main() {
-	mainWindow := mainApplication.NewWindow("LPT settings")
+	mainWindow := mainApplication.NewWindow("LPT")
+	mainWindow.SetIcon(resources.ResourceLogoPng)
 	onSettingsFail := func(input string, err error) {
 		fmt.Println(input, err)
 	}
